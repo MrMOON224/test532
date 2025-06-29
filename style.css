@@ -35,7 +35,14 @@ a:hover {
   opacity: 0.85;
   text-decoration: underline;
 }
-
+.mid {
+  color: indianred;
+  opacity: 1;
+  text-decoration: none;
+}
+.mid:hover{
+  text-decoration: solid;
+}
 /* Navigation Styles */
 /* Header */
 .header {
@@ -271,6 +278,10 @@ input:checked + .slider:before {
 .header1 {
     display: flex;
 }
+.header3 {
+  display: flex;
+  margin: 3%;
+}
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Staatliches&display=swap');
 .gif {
     height: auto;
@@ -285,6 +296,17 @@ input:checked + .slider:before {
     font-size: 250%;
     font-family: Staatliches;
     letter-spacing: 3px;
+}
+.d {
+  font-size: 120%;
+}
+.a2 {
+    width: 45%;
+    height: auto;
+    font-size: 200%;
+    font-family: Staatliches;
+    letter-spacing: 3px;
+    color: #b84646;
 }
 .b {
     width: 100%;
@@ -319,13 +341,31 @@ input:checked + .slider:before {
     border: 0.5px solid white;
     width: 80%;
 }
+.img2 {
+  height: auto;
+    position: relative;
+    right: 5px;
+    border-radius: 8px;
+    background-color: transparent;
+    border: 0.5px solid white;
+    width: 75%;
+}
+.route{
+  width: 20%;
+    height: auto;
+    font-size: 250%;
+    font-family: Staatliches;
+    letter-spacing: 3px;
+}
+
 .header4 {
 display: flex;
 }
 .mywork {
     width: 100%;
     height: auto;
-}
+
+  }
 .ee {
     width: 100%;
     height: auto;
@@ -349,3 +389,20 @@ display: flex;
     height: auto;
     padding: 15px 0px;
 }
+
+
+.bgn {
+   background-color: #04AA6D; /* Green */
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  transition-duration: 0.4s;
+  font-family: Staatliche;
+  cursor: pointer;
+}
+.bgn:hover {background-color: #1ccc8b;}
