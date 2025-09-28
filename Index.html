@@ -1,96 +1,132 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-      <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MrMOON</title>
-  <link rel="stylesheet" href="./style.css">
-
+  <meta charset="UTF-8">
+  <title>School Announcements - Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    h1 { text-align: center; }
+    #announcementForm, #loginForm {
+      max-width: 400px; margin: 20px auto; padding: 15px; background: white;
+      border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    input, textarea, button {
+      width: 100%; margin: 8px 0; padding: 10px;
+      border: 1px solid #ccc; border-radius: 6px;
+    }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .announcement {
+      background: white; padding: 15px; margin: 10px auto;
+      border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); max-width: 600px;
+    }
+    .delete-btn {
+      background: red; color: white; padding: 5px 10px; margin-top: 10px;
+      border: none; border-radius: 4px; cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-<!-- partial:index.partial.html -->
-<header class="header">
+  <h1>📢 Admin - School Announcements</h1>
 
-  <div id="home" class="wrap">
-
-    <h2 class="logo"><a href="#home">BML.</a></h2>
-
-    <a id="menu-icon">&#9776; Menu</a>
-
-    <nav class="navbar">
-      <ul class="menu">
-        <li><a class="active" href="#">Home</a></li><!--
-      --><li><a href="#about">About</a></li><!--
-      --><li><a href="#work">our route</a></li><!--
-      --><li><a href="#contance">Contact</a></li>
-      <label class="switch">
-  <input type="checkbox">
-  <span onclick="myFunction()" class="slider round"></span>
-</label>
-      </ul>
-    </nav>
-
+  <!-- Login Form -->
+  <div id="loginForm">
+    <h3>Admin Login</h3>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
   </div>
-</header>
 
-<div class="content">
-    <h1>heyy.</h1>
-</div>
-<br />
-<br />
-<br /><br /><br />
-<div class="header1">
-    <p class="a">hello. we are blackmarlin and we ride</p>
-    <img class="gif" src="https://blackmarlin.vercel.app/200.gif" alt="" />
-</div>
-<br />
-<br />
-
-<br />
-<div class="b">
-        <p>we also have passion in our life not just cycling</p>
-        <p class="e">
-        likeee contant creation progremming and many moreee
-    </p>
-</div>
-<br id="about" /><br /><br /><br /><br /><br /><br /><br /><br />
-<div class="header2">
-    <h3 class="a">About us</h3>
-    <br />
-    <p id="" class="d">At first, it started as a fun activity among friends, but over time,<a class="mid">, it gained recognition. There were also some competitions along the way. Later, due to various challenges,</a> <span id="">the group was disbanded.</span>  But now, we have been reborn. We're training hard and trying our best to organize street race competitions in Mandalay.</p>
-</div>
-<br id="work"/><br /><br /><br /><br /><br /><br /><br /><br />
-    <div class="header3">
-      <img class="img2" src="https://blackmarlin.vercel.app/d.png" alt="" />
-      <p class="route">take a look at our daily route
-      </p>
-    </div>
-    <br /><br /><br /><br /><br /><br /><br /><br /><br />
-<div>
-        <h2 class="a">My work</h2>
-        <br />
-    <p id="" class="mywork">we have done one races that was held by other people and also crew vs crew races <span class="a2">we have over 15+ member in our crew and u can check them out</span></p>
-      <button class="bgn">check out our member</button>
+  <!-- Admin Post Form -->
+  <div id="announcementForm" style="display:none;">
+    <h3>Post New Announcement</h3>
+    <input type="text" id="title" placeholder="Title">
+    <textarea id="content" placeholder="Write your announcement..."></textarea>
+    <button onclick="postAnnouncement()">Post</button>
   </div>
-<br id="contance"  /><br /><br /><br /><br /><br /><br /><br /><br />
-<div>
-    <h3 class="c">check out our social</h3>
-    <br />
-</div>
-<div class="header4">
-    <br />
-    <p id="" class="ee">we are also on tiktok trying to post tiktok contant like everyone do so why not give it a follow <a href="" class="a">our tiktok</a></p>
-</div>
-<br />
-<br />
-<br />
-<div hidden="" class="soc">
-    <img class="icon" src="https://icon-library.com/images/facebook-icon-transparent-background/facebook-icon-transparent-background-1.jpg" alt="" />
-    <img class="icon2" src="youtube.png" alt="" />
-</div>
-<!-- partial -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script><script  src="./script.js"></script>
 
+  <!-- Announcements -->
+  <div id="announcements"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"></script>
+
+  <script>
+    // ✅ Your Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyATgzeG9ak124o3rL6CdwfpLcApFy81zuU",
+      authDomain: "school-eb97e.firebaseapp.com",
+      projectId: "school-eb97e",
+      storageBucket: "school-eb97e.firebasestorage.app",
+      messagingSenderId: "1009963382013",
+      appId: "1:1009963382013:web:49a6a3289f92cd6c5bfa94",
+      measurementId: "G-7MCFP02KGG"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Hardcoded admin login
+    const ADMIN_USERNAME = "admin";
+    const ADMIN_PASSWORD = "1234";
+
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("announcementForm").style.display = "block";
+      } else {
+        alert("Wrong username or password!");
+      }
+    }
+
+    async function postAnnouncement() {
+      const title = document.getElementById("title").value;
+      const content = document.getElementById("content").value;
+      if (title.trim() === "" || content.trim() === "") {
+        alert("Please fill in all fields");
+        return;
+      }
+
+      await db.collection("announcements").add({
+        title,
+        content,
+        timestamp: Date.now()
+      });
+
+      document.getElementById("title").value = "";
+      document.getElementById("content").value = "";
+    }
+
+    async function deleteAnnouncement(id) {
+      await db.collection("announcements").doc(id).delete();
+    }
+
+    function renderAnnouncements() {
+      db.collection("announcements").orderBy("timestamp", "desc")
+        .onSnapshot(snapshot => {
+          const container = document.getElementById("announcements");
+          container.innerHTML = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement("div");
+            div.className = "announcement";
+            div.innerHTML = `
+              <h3>${data.title}</h3>
+              <p>${data.content}</p>
+              <small>${new Date(data.timestamp).toLocaleString()}</small>
+              <br>
+              <button class="delete-btn" onclick="deleteAnnouncement('${doc.id}')">Delete</button>
+            `;
+            container.appendChild(div);
+          });
+        });
+    }
+
+    renderAnnouncements();
+  </script>
 </body>
 </html>
