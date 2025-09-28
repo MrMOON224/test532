@@ -4,57 +4,53 @@
   <meta charset="UTF-8">
   <title>School Announcements</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-    h1 { text-align: center; }
-    .announcement {
-      background: white; padding: 15px; margin: 10px auto;
-      border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); max-width: 600px;
-    }
+    body { font-family: Arial, sans-serif; margin: 30px; background: #f4f4f9; }
+    h1 { color: #333; text-align: center; }
+    .announcement { background: #fff; padding: 15px; margin: 15px auto; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); max-width: 600px; }
+    .announcement h3 { margin: 0; color: #007bff; }
+    .announcement p { margin: 5px 0; }
   </style>
 </head>
 <body>
-  <h1>📢 School Announcements</h1>
-  <div id="announcements"></div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"></script>
+<h1>📢 School Announcements</h1>
+<div id="announcements"></div>
 
-  <script>
-    // ✅ Same Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyATgzeG9ak124o3rL6CdwfpLcApFy81zuU",
-      authDomain: "school-eb97e.firebaseapp.com",
-      projectId: "school-eb97e",
-      storageBucket: "school-eb97e.firebasestorage.app",
-      messagingSenderId: "1009963382013",
-      appId: "1:1009963382013:web:49a6a3289f92cd6c5bfa94",
-      measurementId: "G-7MCFP02KGG"
-    };
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+<script>
+  // ✅ Your Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyATgzeG9ak124o3rL6CdwfpLcApFy81zuU",
+    authDomain: "school-eb97e.firebaseapp.com",
+    projectId: "school-eb97e",
+    storageBucket: "school-eb97e.firebasestorage.app",
+    messagingSenderId: "1009963382013",
+    appId: "1:1009963382013:web:49a6a3289f92cd6c5bfa94",
+    measurementId: "G-7MCFP02KGG"
+  };
 
-    function renderAnnouncements() {
-      db.collection("announcements").orderBy("timestamp", "desc")
-        .onSnapshot(snapshot => {
-          const container = document.getElementById("announcements");
-          container.innerHTML = "";
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const div = document.createElement("div");
-            div.className = "announcement";
-            div.innerHTML = `
-              <h3>${data.title}</h3>
-              <p>${data.content}</p>
-              <small>${new Date(data.timestamp).toLocaleString()}</small>
-            `;
-            container.appendChild(div);
-          });
-        });
-    }
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-    renderAnnouncements();
-  </script>
+  // ✅ Load Announcements
+  db.collection("announcements").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+    const list = document.getElementById("announcements");
+    list.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const div = document.createElement("div");
+      div.className = "announcement";
+      div.innerHTML = `
+        <h3>${data.title}</h3>
+        <p>${data.content}</p>
+      `;
+      list.appendChild(div);
+    });
+  });
+</script>
+
 </body>
 </html>
