@@ -92,25 +92,25 @@
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
             <h1 class="text-5xl font-black mb-3 tracking-tighter italic">NEXUS</h1>
-            <p class="text-gray-400 text-sm">Secure Peer-to-Peer Network Architecture</p>
+            <p class="text-gray-400 text-sm">Secure Peer-to-Peer Vault Architecture</p>
         </div>
 
         <!-- Create Section -->
         <div id="onboarding-main" class="w-full space-y-4">
             <div class="glass p-4 rounded-3xl mb-2">
-                <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">Account Identity</p>
-                <input id="new-vault-name" placeholder="Enter Account Name..." class="bg-transparent w-full p-2 font-bold text-white outline-none border-b border-white/10 focus:border-blue-500 transition-colors" value="New Account"/>
+                <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">Vault Identity</p>
+                <input id="new-vault-name" placeholder="Enter Vault Name..." class="bg-transparent w-full p-2 font-bold text-white outline-none border-b border-white/10 focus:border-blue-500 transition-colors" value="Personal Vault"/>
             </div>
-            <button class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mb-4 active:scale-95 transition-all" onclick="createNewWallet()">Create Account</button>
-            <button class="w-full py-5 rounded-3xl glass font-bold active:scale-95 transition-all" onclick="showImportBox()">Import Account</button>
+            <button class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mb-4 active:scale-95 transition-all" onclick="createNewWallet()">Generate Vault</button>
+            <button class="w-full py-5 rounded-3xl glass font-bold active:scale-95 transition-all" onclick="showImportBox()">Import Existing</button>
         </div>
 
         <div id="import-box" class="hidden w-full mt-6 animate-fadeIn">
-            <input id="import-id" placeholder="Enter Secret Key or Address..." class="glass w-full p-4 rounded-2xl font-mono text-blue-400 outline-none mb-3 border-white/10"/>
+            <input id="import-id" placeholder="Master Key or bc1q..." class="glass w-full p-4 rounded-2xl font-mono text-blue-400 outline-none mb-3 border-white/10"/>
             <p class="text-[10px] text-gray-500 mb-3 px-2">Tip: Use 'MASTER_ADMIN_2024' for the master account.</p>
             <div class="flex gap-2">
                 <button class="flex-1 glass py-4 rounded-2xl font-black text-gray-400" onclick="hideImportBox()">Back</button>
-                <button class="flex-[2] glass py-4 rounded-2xl font-black text-blue-500" onclick="importWallet()">Sync Account</button>
+                <button class="flex-[2] glass py-4 rounded-2xl font-black text-blue-500" onclick="importWallet()">Sync Node</button>
             </div>
         </div>
     </div>
@@ -121,9 +121,9 @@
         <!-- HEADER -->
         <header class="p-6 pt-[calc(1.5rem+var(--safe-top))] glass flex justify-between items-center border-b border-white/5">
             <div>
-                <p id="wallet-name" class="font-black text-xl tracking-tight">Account</p>
+                <p id="wallet-name" class="font-black text-xl tracking-tight">Vault</p>
                 <div class="text-[10px] text-emerald-500 flex items-center gap-1 font-bold uppercase tracking-widest">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Network Synced
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Backend Synced
                 </div>
             </div>
             <div class="flex gap-2">
@@ -138,7 +138,7 @@
 
         <!-- VIEW: WALLET -->
         <main id="wallet-view" class="view px-6 pt-6 active-view">
-            <p class="uppercase text-gray-600 text-[10px] font-black tracking-[0.2em] mb-1">Portfolio Value</p>
+            <p class="uppercase text-gray-600 text-[10px] font-black tracking-[0.2em] mb-1">Total Assets</p>
             <div class="flex items-end gap-3 mb-8">
                 <h1 id="total" class="text-5xl font-black tracking-tighter">$0.00</h1>
                 <button onclick="togglePrivacy()" class="mb-2 text-gray-500"><i id="privacy-icon" class="fa-regular fa-eye"></i></button>
@@ -166,7 +166,7 @@
             <div id="assets" class="space-y-3"></div>
 
             <h2 class="mt-10 font-black text-lg tracking-tight flex items-center justify-between">
-                Network Activity
+                Global Ledger History
                 <i class="fa-solid fa-chevron-right text-[10px] opacity-30"></i>
             </h2>
             <div id="history" class="mt-4 pb-24 space-y-3"></div>
@@ -195,7 +195,7 @@
             <div id="news-list" class="space-y-4 pb-24">
                 <div class="glass p-5 rounded-3xl border-blue-500/20">
                     <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">System Message</span>
-                    <p class="font-bold mt-2">P2P Transfers between accounts are now zero-fee.</p>
+                    <p class="font-bold mt-2">P2P Transfers between vaults are now zero-fee.</p>
                 </div>
             </div>
         </main>
@@ -204,7 +204,7 @@
         <footer class="absolute bottom-0 left-0 right-0 h-20 glass px-6 flex justify-between items-center pb-[var(--safe-bottom)] border-t border-white/5">
             <button class="nav tab-active flex flex-col items-center flex-1" onclick="switchTab('wallet')">
                 <i class="fa-solid fa-wallet text-xl"></i>
-                <div class="text-[9px] mt-1 font-black uppercase opacity-60">Asset</div>
+                <div class="text-[9px] mt-1 font-black uppercase opacity-60">Vault</div>
             </button>
             <button class="nav text-gray-500 flex flex-col items-center flex-1" onclick="switchTab('market')">
                 <i class="fa-solid fa-chart-line text-xl"></i>
@@ -228,7 +228,7 @@
             <h3 class="text-2xl font-black mb-6">P2P Transfer</h3>
             <div class="space-y-4">
                 <div class="glass p-4 rounded-2xl">
-                    <p class="text-[10px] font-black opacity-40 mb-1">RECEIVING ACCOUNT ID</p>
+                    <p class="text-[10px] font-black opacity-40 mb-1">RECEIVING VAULT ID</p>
                     <input id="send-to" placeholder="bc1q..." class="bg-transparent w-full font-mono text-blue-400 outline-none text-sm" />
                 </div>
                 <div class="glass p-4 rounded-2xl">
@@ -242,7 +242,7 @@
                         </select>
                     </div>
                 </div>
-                <button id="send-btn" class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mt-4" onclick="executeP2PTransfer()">Authorize Transfer</button>
+                <button id="send-btn" class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mt-4" onclick="executeP2PTransfer()">Sync Transfer to Server</button>
             </div>
         </div>
     </div>
@@ -251,13 +251,13 @@
     <div id="settings-modal" class="fixed inset-0 z-[200] hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleModal('settings-modal')"></div>
         <div class="absolute bottom-0 left-0 right-0 glass rounded-t-[3rem] p-8 modal-animate pb-[calc(2rem+var(--safe-bottom))]">
-            <h3 class="text-2xl font-black mb-6">Account Config</h3>
+            <h3 class="text-2xl font-black mb-6">Vault Config</h3>
             <div class="space-y-3">
                 <button onclick="copyAddress()" class="w-full glass p-5 rounded-2xl flex justify-between font-bold text-blue-400">
-                    Account ID: <span class="opacity-50 font-mono text-xs" id="display-id">...</span>
+                    Vault ID: <span class="opacity-50 font-mono text-xs" id="display-id">...</span>
                 </button>
                 <button onclick="logout()" class="w-full glass p-5 rounded-2xl flex justify-between font-bold text-red-400">
-                    Sign Out <i class="fa-solid fa-power-off opacity-40"></i>
+                    Disconnect Session <i class="fa-solid fa-power-off opacity-40"></i>
                 </button>
             </div>
         </div>
@@ -278,7 +278,7 @@ const MASTER_KEY = "MASTER_ADMIN_2024";
 let walletId = localStorage.getItem("nexus_wallet");
 let privacy = false;
 let user = {
-    name: "Standard Account",
+    name: "Standard Vault",
     balances : {
         BTC: {amount:0, rate:67000, icon:"fa-brands fa-bitcoin", color:"text-orange-400"},
         ETH: {amount:0, rate:3500, icon:"fa-brands fa-ethereum", color:"text-indigo-400"},
@@ -287,7 +287,7 @@ let user = {
     history:[]
 };
 
-// INITIALIZE MASTER ACCOUNT
+// INITIALIZE MASTER ACCOUNT PROFILE
 const masterProfile = {
     name: "Master Nexus Account",
     balances: {
@@ -310,7 +310,7 @@ window.onload = async () => {
 
 async function createNewWallet() {
     const nameInput = document.getElementById("new-vault-name").value.trim();
-    if (!nameInput) return showToast("Please name your account");
+    if (!nameInput) return showToast("Please name your vault");
 
     const chars = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
     let addr = "bc1q";
@@ -323,26 +323,31 @@ async function createNewWallet() {
     await db.from("wallets").insert({ id: addr, data: user });
     
     showApp();
-    showToast(`Account "${nameInput}" Created`);
+    showToast(`Vault "${nameInput}" Synced`);
 }
 
 async function loadWallet(){
     try {
-        let {data} = await db.from("wallets").select("data").eq("id", walletId).single();
+        let {data, error} = await db.from("wallets").select("data").eq("id", walletId).maybeSingle();
+        
         if (data) {
             user = data.data;
         } else if (walletId === MASTER_KEY) {
             user = masterProfile;
-            await db.from("wallets").insert({ id: MASTER_KEY, data: user });
+            await db.from("wallets").upsert({ id: MASTER_KEY, data: user });
+        } else {
+            // Handle if ID is set in localStorage but not in DB
+            localStorage.clear();
+            location.reload();
         }
         render();
-    } catch(e) { render(); }
+    } catch(e) { console.error(e); render(); }
 }
 
 function initRealtime(){
     db.channel("vault_sync").on("postgres_changes",
-        {event:"*", schema:"public", table:"wallets"},
-        async (p) => { 
+        {event:"UPDATE", schema:"public", table:"wallets"},
+        (p) => { 
             if(p.new && p.new.id === walletId) {
                 user = p.new.data;
                 render();
@@ -392,7 +397,7 @@ function render(){
                 ${h.type==='Sent'?'-':'+'}${h.amount}
             </p>
         </div>
-    `).join("") : `<p class="text-center py-10 opacity-20 text-xs font-black italic">NO NETWORK ACTIVITY</p>`;
+    `).join("") : `<p class="text-center py-10 opacity-20 text-xs font-black italic">NO SERVER ACTIVITY DETECTED</p>`;
 
     document.getElementById("market-list").innerHTML = [
         {id:'BTC', p:67000, c:'+1.2%'}, {id:'ETH', p:3500, c:'+0.8%'}, {id:'USDT', p:1.00, c:'0.0%'}
@@ -421,32 +426,45 @@ async function executeP2PTransfer(){
     btn.innerText = "Broadcasting...";
 
     try {
-        let {data: receiverData} = await db.from("wallets").select("data").eq("id", toId).single();
-        if(!receiverData) {
+        // 1. Fetch Receiver safely using maybeSingle
+        let { data: receiverDoc, error: fetchError } = await db.from("wallets").select("data").eq("id", toId).maybeSingle();
+        
+        if(fetchError || !receiverDoc) {
             btn.disabled = false;
-            btn.innerText = "Authorize Transfer";
-            return showToast("Account not found");
+            btn.innerText = "Sync Transfer to Server";
+            return showToast("Receiver Vault not found");
         }
 
-        let receiver = receiverData.data;
-        user.balances[asset].amount -= amt;
-        user.history.push({ type: "Sent", asset, amount: amt, party: toId, time: Date.now() });
+        let receiverData = receiverDoc.data;
 
-        receiver.balances[asset].amount += amt;
-        receiver.history.push({ type: "Received", asset, amount: amt, party: walletId, time: Date.now() });
+        // 2. Local State Prep
+        const senderUpdate = JSON.parse(JSON.stringify(user));
+        const receiverUpdate = JSON.parse(JSON.stringify(receiverData));
 
-        await Promise.all([
-            db.from("wallets").update({data:user}).eq("id", walletId),
-            db.from("wallets").update({data:receiver}).eq("id", toId)
-        ]);
+        senderUpdate.balances[asset].amount -= amt;
+        senderUpdate.history.push({ type: "Sent", asset, amount: amt, party: toId, time: Date.now() });
 
+        receiverUpdate.balances[asset].amount += amt;
+        receiverUpdate.history.push({ type: "Received", asset, amount: amt, party: walletId, time: Date.now() });
+
+        // 3. Sequential Update (More stable for P2P)
+        const { error: e1 } = await db.from("wallets").update({ data: senderUpdate }).eq("id", walletId);
+        if(e1) throw e1;
+
+        const { error: e2 } = await db.from("wallets").update({ data: receiverUpdate }).eq("id", toId);
+        if(e2) throw e2;
+
+        // Update local user object immediately
+        user = senderUpdate;
+        
         toggleModal('send-modal');
-        showToast(`Transaction Broadast: ${amt} ${asset}`);
+        showToast(`Success: ${amt} ${asset} Transferred`);
     } catch(err) {
-        showToast("Sync Error");
+        console.error(err);
+        showToast("Ledger Sync Failure");
     } finally {
         btn.disabled = false;
-        btn.innerText = "Authorize Transfer";
+        btn.innerText = "Sync Transfer to Server";
         render();
     }
 }
@@ -462,14 +480,19 @@ function toggleModal(id){ document.getElementById(id).classList.toggle('hidden')
 function openSendModal(){ toggleModal('send-modal'); }
 function showToast(m){
     const t = document.createElement('div');
-    t.className = "glass px-6 py-3 rounded-2xl text-xs font-black text-blue-400 border-blue-500/20";
+    t.className = "glass px-6 py-3 rounded-2xl text-xs font-black text-blue-400 border-blue-500/20 shadow-lg";
     t.innerText = m;
     document.getElementById('toast-container').appendChild(t);
     setTimeout(() => t.remove(), 3000);
 }
 function copyAddress(){
-    navigator.clipboard.writeText(walletId);
-    showToast("Account ID Copied");
+    const el = document.createElement('textarea');
+    el.value = walletId;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast("ID Copied to Clipboard");
 }
 function logout(){ localStorage.clear(); location.reload(); }
 function togglePrivacy(){ privacy = !privacy; render(); }
@@ -486,10 +509,12 @@ function hideImportBox(){
     document.getElementById("onboarding-main").classList.remove("hidden"); 
 }
 async function importWallet(){
-    let id = document.getElementById("import-id").value;
+    let id = document.getElementById("import-id").value.trim();
     if(!id) return showToast("Enter ID");
-    walletId = id; localStorage.setItem("nexus_wallet", id);
-    await loadWallet(); showApp();
+    walletId = id; 
+    localStorage.setItem("nexus_wallet", id);
+    await loadWallet(); 
+    showApp();
     initRealtime();
 }
 </script>
