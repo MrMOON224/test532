@@ -270,14 +270,27 @@
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
         // Firebase Setup
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'crypto-vault-v1';
+       // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-        let user = null;
-        let isPrivacyMode = false;
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDPPQwJmyrmpGbx3ellXV8Hx3BcUs8iMO4",
+  authDomain: "fgaff-1723b.firebaseapp.com",
+  projectId: "fgaff-1723b",
+  storageBucket: "fgaff-1723b.firebasestorage.app",
+  messagingSenderId: "668981568474",
+  appId: "1:668981568474:web:b591323be32d3372e7d6e3",
+  measurementId: "G-STCR1V1HQH"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
         // Toast Helper
         const showToast = (msg) => {
