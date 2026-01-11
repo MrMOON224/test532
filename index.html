@@ -287,7 +287,6 @@ let user = {
     history:[]
 };
 
-// INITIALIZE MASTER ACCOUNT PROFILE
 const masterProfile = {
     name: "Master Nexus Account",
     balances: {
@@ -336,7 +335,6 @@ async function loadWallet(){
             user = masterProfile;
             await db.from("wallets").upsert({ id: MASTER_KEY, data: user });
         } else {
-            // Handle if ID is set in localStorage but not in DB
             localStorage.clear();
             location.reload();
         }
@@ -412,6 +410,7 @@ function render(){
     `).join("");
 }
 
+// -------------------- P2P TRANSFER USING BACKEND --------------------
 async function executeP2PTransfer(){
     const btn = document.getElementById('send-btn');
     let toId = document.getElementById('send-to').value.trim();
@@ -419,56 +418,40 @@ async function executeP2PTransfer(){
     let asset = document.getElementById('send-asset').value;
 
     if(!toId || isNaN(amt) || amt <= 0) return showToast("Invalid Inputs");
-    if(user.balances[asset].amount < amt) return showToast("Balance too low");
     if(toId === walletId) return showToast("Cannot send to self");
 
     btn.disabled = true;
     btn.innerText = "Broadcasting...";
 
     try {
-        // 1. Fetch Receiver safely using maybeSingle
-        let { data: receiverDoc, error: fetchError } = await db.from("wallets").select("data").eq("id", toId).maybeSingle();
-        
-        if(fetchError || !receiverDoc) {
-            btn.disabled = false;
-            btn.innerText = "Sync Transfer to Server";
-            return showToast("Receiver Vault not found");
+        // Call backend atomic transfer function
+        let { data, error } = await db.rpc('p2p_transfer', {
+            sender_id: walletId,
+            receiver_id: toId,
+            asset: asset,
+            amount: amt
+        });
+
+        if(error || data !== "Success") {
+            console.error(error);
+            showToast(data || "Transfer Failed");
+        } else {
+            showToast(`Success: ${amt} ${asset} transferred`);
         }
 
-        let receiverData = receiverDoc.data;
-
-        // 2. Local State Prep
-        const senderUpdate = JSON.parse(JSON.stringify(user));
-        const receiverUpdate = JSON.parse(JSON.stringify(receiverData));
-
-        senderUpdate.balances[asset].amount -= amt;
-        senderUpdate.history.push({ type: "Sent", asset, amount: amt, party: toId, time: Date.now() });
-
-        receiverUpdate.balances[asset].amount += amt;
-        receiverUpdate.history.push({ type: "Received", asset, amount: amt, party: walletId, time: Date.now() });
-
-        // 3. Sequential Update (More stable for P2P)
-        const { error: e1 } = await db.from("wallets").update({ data: senderUpdate }).eq("id", walletId);
-        if(e1) throw e1;
-
-        const { error: e2 } = await db.from("wallets").update({ data: receiverUpdate }).eq("id", toId);
-        if(e2) throw e2;
-
-        // Update local user object immediately
-        user = senderUpdate;
-        
+        // Reload wallet to reflect changes
+        await loadWallet();
         toggleModal('send-modal');
-        showToast(`Success: ${amt} ${asset} Transferred`);
     } catch(err) {
         console.error(err);
         showToast("Ledger Sync Failure");
     } finally {
         btn.disabled = false;
         btn.innerText = "Sync Transfer to Server";
-        render();
     }
 }
 
+// -------------------- UTILITY FUNCTIONS --------------------
 function switchTab(t){
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
     document.getElementById(`${t}-view`).classList.remove('hidden');
@@ -518,5 +501,6 @@ async function importWallet(){
     initRealtime();
 }
 </script>
+
 </body>
 </html>
