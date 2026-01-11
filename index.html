@@ -48,66 +48,58 @@
             display: none;
         }
 
-        .loading-dots:after {
-            content: '.';
-            animation: dots 1.5s steps(5, end) infinite;
-        }
-        @keyframes dots { 
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60% { content: '...'; }
-        }
-
         .notification {
             transform: translateY(-100%);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .notification.show { transform: translateY(0); }
+
+        input::placeholder { color: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
 
     <!-- Notification Toast -->
-    <div id="toast" class="notification fixed top-4 left-4 right-4 z-[200] glass p-4 rounded-2xl flex items-center gap-3 border-l-4 border-l-blue-500 shadow-2xl pointer-events-none">
+    <div id="toast" class="notification fixed top-4 left-4 right-4 z-[300] glass p-4 rounded-2xl flex items-center gap-3 border-l-4 border-l-blue-500 shadow-2xl pointer-events-none">
         <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
             <i class="fas fa-info-circle"></i>
         </div>
         <div class="flex-1">
-            <p id="toast-msg" class="text-sm font-medium">Cloud sync active</p>
+            <p id="toast-msg" class="text-sm font-medium">System active</p>
         </div>
     </div>
 
     <div class="w-full max-w-md h-full bg-[#0a0a0a] relative flex flex-col mx-auto shadow-2xl border-x border-white/5 overflow-hidden">
         
-        <!-- INITIAL AUTH/SETUP SCREEN -->
+        <!-- AUTH SCREEN -->
         <div id="auth-screen" class="absolute inset-0 z-[60] bg-[#0a0a0a] p-8 flex flex-col justify-center transition-all duration-500">
             <div class="mb-12 text-center">
                 <div class="w-20 h-20 bg-blue-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
                     <i class="fas fa-shield-halved text-4xl text-white"></i>
                 </div>
                 <h1 class="text-3xl font-bold mb-2">Nexus Vault</h1>
-                <p class="text-gray-400">Secure Cloud-Synced Wallet</p>
+                <p class="text-gray-400">Secure Peer-to-Peer Wallet</p>
             </div>
 
             <div id="auth-actions" class="space-y-4">
                 <div id="setup-view">
-                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block text-gray-400">Wallet Name</label>
-                    <input type="text" id="wallet-name-input" placeholder="e.g. My Ledger" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4">
-                    <button id="btn-create" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg">Create New Wallet</button>
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Account Name</label>
+                    <input type="text" id="wallet-name-input" placeholder="e.g. Satoshi" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4">
+                    <button id="btn-create" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg">Create Individual Account</button>
                     
                     <div class="relative py-6">
                         <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div>
-                        <div class="relative flex justify-center text-xs uppercase"><span class="bg-[#0a0a0a] px-2 text-gray-500">Restore Existing</span></div>
+                        <div class="relative flex justify-center text-xs uppercase"><span class="bg-[#0a0a0a] px-2 text-gray-500">Restore Session</span></div>
                     </div>
 
-                    <input type="text" id="sync-code-input" placeholder="Enter 12-digit Sync ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4 text-center font-mono uppercase tracking-widest">
-                    <button id="btn-sync" class="w-full bg-white/10 py-3 rounded-xl font-bold hover:bg-white/20">Sync Data</button>
+                    <input type="text" id="sync-code-input" placeholder="Enter Sync ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4 text-center font-mono">
+                    <button id="btn-sync" class="w-full bg-white/10 py-3 rounded-xl font-bold hover:bg-white/20">Login to Vault</button>
                 </div>
             </div>
 
             <div id="auth-loading" class="hidden text-center">
                 <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-sm text-gray-400 loading-dots">Connecting to secure node</p>
+                <p id="loading-text" class="text-sm text-gray-400">Syncing with blockchain...</p>
             </div>
         </div>
 
@@ -116,148 +108,105 @@
             
             <div class="p-6 flex justify-between items-center flex-shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-sm font-bold shadow-lg shadow-blue-500/20">NV</div>
+                    <div id="user-avatar" class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold">U</div>
                     <div>
-                        <span id="display-wallet-name" class="font-bold text-sm block">Wallet</span>
-                        <span id="sync-code-display" class="text-[10px] text-blue-500 font-mono font-bold tracking-tight">ID: LOADING...</span>
+                        <span id="display-wallet-name" class="font-bold text-sm block">Loading...</span>
+                        <span id="sync-code-display" class="text-[10px] text-blue-500 font-mono font-bold">ID: ...</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-4 text-gray-400">
-                    <i class="fas fa-qrcode cursor-pointer hover:text-white transition-colors" onclick="showModal('receive-modal')"></i>
-                    <i class="fas fa-arrow-right-from-bracket cursor-pointer hover:text-white" onclick="handleLogout()"></i>
+                    <i class="fas fa-qrcode cursor-pointer hover:text-white" onclick="showModal('receive-modal')"></i>
+                    <i class="fas fa-power-off cursor-pointer hover:text-white" onclick="handleLogout()"></i>
                 </div>
             </div>
 
             <div class="scroll-container">
+                <!-- Balance Section -->
                 <div class="px-6 py-4">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-gray-400 text-sm font-medium">Net Worth</span>
-                        <i id="privacy-icon" class="far fa-eye text-xs text-gray-600 cursor-pointer" onclick="togglePrivacy()"></i>
-                    </div>
-                    <h2 id="total-balance" class="text-4xl font-bold tracking-tight">$824,192.40</h2>
+                    <span class="text-gray-400 text-sm font-medium">Available Balance</span>
+                    <h2 id="total-balance" class="text-4xl font-bold tracking-tight mt-1">$0.00</h2>
                     <div class="flex items-center gap-2 mt-2">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span class="text-gray-500 text-xs font-medium">Cloud Synchronized</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span class="text-gray-500 text-xs font-medium">Live Cloud Sync</span>
                     </div>
                 </div>
 
+                <!-- Action Grid -->
                 <div class="grid grid-cols-4 gap-4 px-6 py-6">
-                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
-                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-arrow-up"></i></div>
+                    <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="showModal('send-modal')">
+                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-paper-plane"></i></div>
                         <span class="text-[11px] font-semibold text-gray-400 uppercase">Send</span>
                     </div>
-                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
-                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-arrow-down"></i></div>
-                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Recv</span>
+                    <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="showModal('receive-modal')">
+                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-qrcode"></i></div>
+                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Receive</span>
                     </div>
-                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
+                    <div class="flex flex-col items-center gap-2 opacity-50 cursor-not-allowed">
                         <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-repeat"></i></div>
                         <span class="text-[11px] font-semibold text-gray-400 uppercase">Swap</span>
                     </div>
-                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
-                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-bank"></i></div>
-                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Buy</span>
+                    <div class="flex flex-col items-center gap-2 opacity-50 cursor-not-allowed">
+                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-plus"></i></div>
+                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Add</span>
                     </div>
                 </div>
 
+                <!-- History -->
                 <div class="px-6">
-                    <h3 class="font-bold text-lg mb-4 flex justify-between items-center">
-                        Assets
-                        <span class="text-xs font-normal text-gray-500">3 tokens</span>
-                    </h3>
-                    <div id="assets-list" class="space-y-3">
-                        <div class="coin-card glass p-4 rounded-2xl flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 bg-orange-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg shadow-orange-500/20"><i class="fab fa-bitcoin"></i></div>
-                                <div><div class="font-bold">Bitcoin</div><div class="text-xs text-gray-500">8.42 BTC</div></div>
-                            </div>
-                            <div class="text-right"><div class="font-bold balance-val">$548,210.30</div><div class="text-xs text-green-500">+2.4%</div></div>
-                        </div>
-                        <div class="coin-card glass p-4 rounded-2xl flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 bg-[#14F195] rounded-full flex items-center justify-center text-black text-xl shadow-lg shadow-green-500/20 font-bold">S</div>
-                                <div><div class="font-bold">Solana</div><div class="text-xs text-gray-500">1,240.50 SOL</div></div>
-                            </div>
-                            <div class="text-right"><div class="font-bold balance-val">$189,502.10</div><div class="text-xs text-green-500">+12.1%</div></div>
-                        </div>
-                        <div class="coin-card glass p-4 rounded-2xl flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-500/20"><i class="fab fa-ethereum"></i></div>
-                                <div><div class="font-bold">Ethereum</div><div class="text-xs text-gray-500">35.20 ETH</div></div>
-                            </div>
-                            <div class="text-right"><div class="font-bold balance-val">$86,480.00</div><div class="text-xs text-red-400">-0.8%</div></div>
-                        </div>
+                    <h3 class="font-bold text-lg mb-4">Activity</h3>
+                    <div id="history-list" class="space-y-3 pb-24">
+                        <!-- List populated by JS -->
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Nav -->
             <div class="fixed-nav glass h-20 px-10 flex justify-between items-center border-t border-white/10 bg-[#0a0a0a]/90 z-50">
-                <div class="flex flex-col items-center gap-1 text-blue-500 cursor-pointer" onclick="hideAllModals()">
+                <div class="flex flex-col items-center gap-1 text-blue-500 cursor-pointer">
                     <i class="fas fa-wallet text-xl"></i>
-                    <span class="text-[10px] font-bold">Wallet</span>
+                    <span class="text-[10px] font-bold">Vault</span>
                 </div>
-                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showModal('market-modal')">
+                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showToast('Market coming soon')">
                     <i class="fas fa-chart-line text-xl"></i>
                     <span class="text-[10px]">Market</span>
                 </div>
-                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showModal('history-modal')">
-                    <i class="fas fa-clock-rotate-left text-xl"></i>
-                    <span class="text-[10px]">History</span>
+                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showToast('Settings coming soon')">
+                    <i class="fas fa-cog text-xl"></i>
+                    <span class="text-[10px]">Settings</span>
                 </div>
             </div>
         </div>
 
-        <!-- HISTORY MODAL -->
-        <div id="history-modal" class="hidden absolute inset-0 z-[100] bg-[#0a0a0a] flex flex-col">
+        <!-- SEND MODAL -->
+        <div id="send-modal" class="hidden absolute inset-0 z-[150] bg-[#0a0a0a] flex flex-col">
             <div class="p-6 flex items-center gap-4 border-b border-white/5">
-                <i class="fas fa-arrow-left text-gray-400" onclick="hideModal('history-modal')"></i>
-                <h3 class="text-xl font-bold">Activity</h3>
+                <i class="fas fa-arrow-left text-gray-400 cursor-pointer" onclick="hideModal('send-modal')"></i>
+                <h3 class="text-xl font-bold">Send Funds</h3>
             </div>
-            <div id="history-list" class="scroll-container p-6 space-y-6">
-                <!-- Data from DB -->
+            <div class="p-6 space-y-6">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Recipient Sync ID</label>
+                    <input type="text" id="send-target-id" placeholder="Paste their Sync ID here" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 text-sm font-mono">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Amount ($)</label>
+                    <input type="number" id="send-amount" placeholder="0.00" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 text-2xl font-bold">
+                </div>
+                <button id="btn-confirm-send" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg shadow-xl">Confirm Transfer</button>
+                <p class="text-[10px] text-gray-500 text-center">Cloud transfers are instant and irreversible.</p>
             </div>
         </div>
 
-        <!-- MARKET MODAL -->
-        <div id="market-modal" class="hidden absolute inset-0 z-[100] bg-[#0a0a0a] flex flex-col">
-            <div class="p-6 flex items-center gap-4 border-b border-white/5">
-                <i class="fas fa-arrow-left text-gray-400" onclick="hideModal('market-modal')"></i>
-                <h3 class="text-xl font-bold">Market Cap</h3>
-            </div>
-            <div class="scroll-container p-6">
-                <div class="w-full h-48 bg-white/5 rounded-3xl mb-8 relative overflow-hidden p-6 flex flex-col justify-center">
-                    <div class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Total Crypto Market</div>
-                    <div id="market-cap" class="text-3xl font-bold">$3.12T</div>
-                    <div class="text-green-500 text-sm font-bold mt-1">+1.24% today</div>
-                </div>
-                <div class="space-y-6">
-                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
-                        <span class="font-bold">Global Rank</span>
-                        <span class="text-blue-500">#1</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- RECEIVE MODAL (SYNC DETAILS) -->
+        <!-- RECEIVE MODAL -->
         <div id="receive-modal" class="hidden absolute inset-0 z-[150] bg-black/95 flex items-center justify-center p-8">
-            <div class="w-full bg-[#111] p-8 rounded-3xl text-center border border-white/10 shadow-2xl">
-                <h3 class="font-bold text-xl mb-6">Cloud Sync Identity</h3>
-                <div class="bg-white p-3 rounded-2xl inline-block mb-6 shadow-lg shadow-white/5">
+            <div class="w-full bg-[#111] p-8 rounded-3xl text-center border border-white/10">
+                <h3 class="font-bold text-xl mb-6">Your Sync ID</h3>
+                <div class="bg-white p-4 rounded-2xl inline-block mb-6">
                     <i class="fas fa-qrcode text-8xl text-black"></i>
                 </div>
-                <div class="text-left space-y-4 mb-8">
-                    <div>
-                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Public Address</p>
-                        <p id="wallet-id-copy" class="text-xs font-mono break-all text-gray-300 bg-white/5 p-3 rounded-xl border border-white/5">LOADING...</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Restore/Sync Code</p>
-                        <p id="sync-id-copy" class="text-sm font-mono font-bold text-blue-400 bg-blue-500/5 p-3 rounded-xl border border-blue-500/10">LOADING...</p>
-                    </div>
-                </div>
-                <button onclick="copyToClipboard('sync-id-copy')" class="w-full btn-gradient py-4 rounded-xl font-bold text-sm mb-3">Copy Sync Code</button>
+                <p class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">Personal Identification Code</p>
+                <div id="my-sync-id" class="text-sm font-mono font-bold text-blue-400 bg-blue-500/5 p-4 rounded-xl border border-blue-500/20 mb-6 break-all">...</div>
+                <button onclick="copyToClipboard('my-sync-id')" class="w-full btn-gradient py-4 rounded-xl font-bold text-sm mb-3">Copy Sync ID</button>
                 <button onclick="hideModal('receive-modal')" class="w-full text-gray-500 font-medium py-2">Close</button>
             </div>
         </div>
@@ -267,51 +216,28 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, arrayUnion, runTransaction } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // Global Variables
+        // Firebase Setup
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'nexus-vault-main';
-        
-        let user = null;
-        let isPrivacyMode = false;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-vault';
 
-        // Toast Helper
+        let currentUserData = null;
+        let currentUserId = null;
+
+        // UI Helpers
         const showToast = (msg) => {
-            const toast = document.getElementById('toast');
+            const t = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
         };
 
-        // UI Global Functions
         window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
         window.hideModal = (id) => document.getElementById(id).classList.add('hidden');
-        window.hideAllModals = () => ['market-modal', 'history-modal', 'receive-modal'].forEach(hideModal);
-        
-        window.togglePrivacy = () => {
-            isPrivacyMode = !isPrivacyMode;
-            const balanceEl = document.getElementById('total-balance');
-            const subVals = document.querySelectorAll('.balance-val');
-            const icon = document.getElementById('privacy-icon');
-            
-            if (isPrivacyMode) {
-                balanceEl.innerText = '••••••••';
-                subVals.forEach(el => el.innerText = '••••');
-                icon.classList.replace('far', 'fas');
-            } else {
-                balanceEl.innerText = '$824,192.40';
-                subVals.forEach((el, i) => {
-                    const vals = ['$548,210.30', '$189,502.10', '$86,480.00'];
-                    el.innerText = vals[i];
-                });
-                icon.classList.replace('fas', 'far');
-            }
-        };
-
         window.copyToClipboard = (id) => {
             const text = document.getElementById(id).innerText;
             const el = document.createElement('textarea');
@@ -324,131 +250,189 @@
         };
 
         window.handleLogout = () => {
-            if(confirm("Logging out will clear session. Make sure you have your Sync ID saved!")) {
-                localStorage.clear();
+            if(confirm("Logout? Make sure you have your Sync ID saved!")) {
+                localStorage.removeItem('nexus_vault_user_id');
                 location.reload();
             }
         };
 
-        // Backend Integration
-        const startAppFlow = async (u) => {
-            user = u;
-            const storedWalletId = localStorage.getItem('nexus_wallet_id');
-            if (storedWalletId) {
-                initWallet(null, storedWalletId);
-            }
-        };
-
-        const initWallet = async (name, existingUid = null) => {
-            if (!user) return;
-            
+        // Backend Core Functions
+        const initUser = async (name, existingId = null) => {
             document.getElementById('setup-view').classList.add('hidden');
             document.getElementById('auth-loading').classList.remove('hidden');
 
-            const targetUid = existingUid || user.uid;
-            const walletRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallets', targetUid);
-
+            const uid = existingId || auth.currentUser.uid;
+            currentUserId = uid;
+            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
+            
             try {
-                const snap = await getDoc(walletRef);
+                const snap = await getDoc(userRef);
                 if (!snap.exists()) {
-                    if (existingUid) {
-                        showToast("Wallet ID not found.");
-                        document.getElementById('setup-view').classList.remove('hidden');
-                        document.getElementById('auth-loading').classList.add('hidden');
+                    if (existingId) {
+                        showToast("Invalid Sync ID");
+                        resetAuthUI();
                         return;
                     }
-
-                    await setDoc(walletRef, {
-                        name: name || 'Main Vault',
-                        balance: 824192.40,
-                        created: Date.now(),
-                        history: [
-                            { type: 'in', label: 'RDM Pay Incoming', amount: '24,500.00', date: 'Jan 10, 2026' },
-                            { type: 'in', label: 'Mining Payout', amount: '12,000.00', date: 'Dec 28, 2025' },
-                            { type: 'swap', label: 'BTC to SOL Swap', amount: 'Completed', date: 'Dec 15, 2025' }
-                        ]
+                    // Create new individual account
+                    await setDoc(userRef, {
+                        name: name || 'Anonymous User',
+                        balance: 1000.00, // Starting bonus
+                        history: [{ type: 'in', label: 'Welcome Bonus', amount: '1,000.00', date: new Date().toLocaleDateString() }],
+                        created: Date.now()
                     });
                 }
-
-                localStorage.setItem('nexus_wallet_id', targetUid);
-                listenToWallet(targetUid);
+                
+                localStorage.setItem('nexus_vault_user_id', uid);
+                startSyncListener(uid);
             } catch (e) {
-                console.error(e);
-                showToast("Connection error.");
+                showToast("Connection error");
+                resetAuthUI();
             }
         };
 
-        const listenToWallet = (uid) => {
-            const walletRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallets', uid);
-            
-            onSnapshot(walletRef, (snapshot) => {
-                const data = snapshot.data();
-                if (!data) return;
-
-                document.getElementById('display-wallet-name').innerText = data.name;
-                const shortId = uid.substring(0, 12).toUpperCase();
-                document.getElementById('sync-code-display').innerText = `Sync ID: ${shortId}`;
-                document.getElementById('sync-id-copy').innerText = uid;
-                document.getElementById('wallet-id-copy').innerText = `bc1q${uid.toLowerCase().substring(0,24)}`;
-                
-                renderHistory(data.history || []);
-
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.replace('hidden', 'flex');
-                showToast("Cloud Data Synced");
-            }, (err) => {
-                showToast("Sync interrupted.");
-            });
+        const resetAuthUI = () => {
+            document.getElementById('setup-view').classList.remove('hidden');
+            document.getElementById('auth-loading').classList.add('hidden');
         };
 
-        const renderHistory = (history) => {
-            const container = document.getElementById('history-list');
-            container.innerHTML = `<p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Confirmed Transactions</p>`;
-            
-            history.forEach(tx => {
+        const startSyncListener = (uid) => {
+            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
+            onSnapshot(userRef, (snapshot) => {
+                const data = snapshot.data();
+                if (data) {
+                    currentUserData = data;
+                    updateDashboard(uid, data);
+                }
+            }, (err) => showToast("Sync Error"));
+        };
+
+        const updateDashboard = (uid, data) => {
+            document.getElementById('display-wallet-name').innerText = data.name;
+            document.getElementById('user-avatar').innerText = data.name.charAt(0).toUpperCase();
+            document.getElementById('total-balance').innerText = `$${data.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('sync-code-display').innerText = `ID: ${uid.substring(0,8).toUpperCase()}...`;
+            document.getElementById('my-sync-id').innerText = uid;
+
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            [...data.history].reverse().forEach(tx => {
                 const isPlus = tx.type === 'in';
-                container.innerHTML += `
+                list.innerHTML += `
                     <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full ${isPlus ? 'bg-green-500/10 text-green-500' : 'bg-white/10 text-gray-400'} flex items-center justify-center">
-                                <i class="fas ${isPlus ? 'fa-arrow-down-left' : 'fa-repeat'}"></i>
+                            <div class="w-10 h-10 rounded-full ${isPlus ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} flex items-center justify-center">
+                                <i class="fas ${isPlus ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
                             </div>
                             <div>
                                 <div class="font-bold text-sm">${tx.label}</div>
                                 <div class="text-[10px] text-gray-500">${tx.date}</div>
                             </div>
                         </div>
-                        <div class="text-right font-bold ${isPlus ? 'text-green-500' : 'text-gray-400'}">
-                            ${isPlus ? '+$' : ''}${tx.amount}
+                        <div class="text-right font-bold ${isPlus ? 'text-green-500' : 'text-red-500'}">
+                            ${isPlus ? '+' : '-'}$${tx.amount}
                         </div>
                     </div>
                 `;
             });
+
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.replace('hidden', 'flex');
         };
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+        // THE TRANSFER LOGIC (Peer-to-Peer)
+        const processTransfer = async () => {
+            const targetId = document.getElementById('send-target-id').value.trim();
+            const amountStr = document.getElementById('send-amount').value;
+            const amount = parseFloat(amountStr);
+
+            if (!targetId || targetId === currentUserId) {
+                showToast("Invalid Target ID");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0 || amount > currentUserData.balance) {
+                showToast("Invalid Amount");
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirm-send');
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const senderRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUserId);
+                    const receiverRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', targetId);
+
+                    const receiverSnap = await transaction.get(receiverRef);
+                    if (!receiverSnap.exists()) {
+                        throw "User not found";
+                    }
+
+                    const senderSnap = await transaction.get(senderRef);
+                    const newSenderBal = senderSnap.data().balance - amount;
+                    const newReceiverBal = receiverSnap.data().balance + amount;
+
+                    const date = new Date().toLocaleDateString();
+
+                    transaction.update(senderRef, {
+                        balance: newSenderBal,
+                        history: arrayUnion({ type: 'out', label: `Sent to ...${targetId.slice(-4)}`, amount: amount.toFixed(2), date })
+                    });
+
+                    transaction.update(receiverRef, {
+                        balance: newReceiverBal,
+                        history: arrayUnion({ type: 'in', label: `From ...${currentUserId.slice(-4)}`, amount: amount.toFixed(2), date })
+                    });
+                });
+
+                showToast("Transfer Successful!");
+                hideModal('send-modal');
+                document.getElementById('send-target-id').value = '';
+                document.getElementById('send-amount').value = '';
+            } catch (e) {
+                showToast(e === "User not found" ? "Recipient ID not found" : "Transfer Failed");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Confirm Transfer";
             }
         };
 
-        onAuthStateChanged(auth, (u) => {
-            if (u) startAppFlow(u);
-        });
+        // Bootstrap
+        const startup = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
 
-        initAuth();
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        const savedId = localStorage.getItem('nexus_vault_user_id');
+                        if (savedId) initUser(null, savedId);
+                    }
+                });
+            } catch (err) {
+                showToast("Server unreachable");
+            }
+        };
 
+        startup();
+
+        // Event Listeners
         document.getElementById('btn-create').onclick = () => {
-            const val = document.getElementById('wallet-name-input').value;
-            initWallet(val);
+            const name = document.getElementById('wallet-name-input').value.trim();
+            if (name) initUser(name);
+            else showToast("Enter a name");
         };
 
         document.getElementById('btn-sync').onclick = () => {
-            const code = document.getElementById('sync-code-input').value;
-            if (code) initWallet(null, code.trim().toLowerCase());
+            const code = document.getElementById('sync-code-input').value.trim();
+            if (code) initUser(null, code);
+            else showToast("Enter Sync ID");
         };
+
+        document.getElementById('btn-confirm-send').onclick = processTransfer;
 
     </script>
 </body>
