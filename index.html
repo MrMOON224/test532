@@ -3,232 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus Vault - Crypto Wallet</title>
+    <title>Nexus Vault - Decentralized Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Gun.js for free decentralized P2P sync -->
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
         
         html, body {
             font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
+            background-color: #050505;
             color: white;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: fixed;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden; position: fixed;
         }
 
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .btn-gradient {
-            background: linear-gradient(90deg, #3b82f6, #2563eb);
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
             transition: all 0.3s ease;
         }
 
-        .btn-gradient:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-        }
+        .btn-primary:active { transform: scale(0.98); }
 
         .scroll-container {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 100px;
+            padding-bottom: 120px;
         }
-        
-        .scroll-container::-webkit-scrollbar {
-            display: none;
-        }
+        .scroll-container::-webkit-scrollbar { display: none; }
 
         .notification {
-            transform: translateY(-100%);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateY(-130%);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .notification.show { transform: translateY(0); }
 
-        input::placeholder { color: rgba(255,255,255,0.3); }
+        .mesh-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% -20%, #1e3a8a 0%, transparent 50%);
+            opacity: 0.4;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
+    <div class="mesh-bg"></div>
+
     <!-- Notification Toast -->
-    <div id="toast" class="notification fixed top-4 left-4 right-4 z-[300] glass p-4 rounded-2xl flex items-center gap-3 border-l-4 border-l-blue-500 shadow-2xl pointer-events-none">
-        <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
-            <i class="fas fa-info-circle"></i>
+    <div id="toast" class="notification fixed top-6 left-6 right-6 z-[300] glass p-4 rounded-3xl flex items-center gap-4 shadow-2xl pointer-events-none">
+        <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 shadow-inner">
+            <i class="fas fa-bolt-lightning"></i>
         </div>
-        <div class="flex-1">
-            <p id="toast-msg" class="text-sm font-medium">System active</p>
-        </div>
+        <div class="flex-1 text-sm font-bold tracking-tight" id="toast-msg">Nexus Initialized</div>
     </div>
 
-    <div class="w-full max-w-md h-full bg-[#0a0a0a] relative flex flex-col mx-auto shadow-2xl border-x border-white/5 overflow-hidden">
+    <div class="w-full max-w-md h-full bg-[#050505]/80 relative flex flex-col mx-auto shadow-2xl overflow-hidden border-x border-white/5">
         
         <!-- AUTH SCREEN -->
-        <div id="auth-screen" class="absolute inset-0 z-[60] bg-[#0a0a0a] p-8 flex flex-col justify-center transition-all duration-500">
-            <div class="mb-12 text-center">
-                <div class="w-20 h-20 bg-blue-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <i class="fas fa-shield-halved text-4xl text-white"></i>
+        <div id="auth-screen" class="absolute inset-0 z-[60] bg-[#050505] p-10 flex flex-col justify-center transition-all duration-700">
+            <div class="text-center mb-12">
+                <div class="w-24 h-24 bg-blue-600 rounded-[2.5rem] mx-auto mb-8 flex items-center justify-center shadow-3xl shadow-blue-600/40 transform rotate-6">
+                    <i class="fas fa-shield-halved text-5xl text-white"></i>
                 </div>
-                <h1 class="text-3xl font-bold mb-2">Nexus Vault</h1>
-                <p class="text-gray-400">Secure Peer-to-Peer Wallet</p>
+                <h1 class="text-4xl font-black mb-3 tracking-tighter">NEXUS VAULT</h1>
+                <p class="text-gray-500 font-medium">Free P2P Mesh Network Wallet</p>
             </div>
 
-            <div id="auth-actions" class="space-y-4">
-                <div id="setup-view">
-                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Account Name</label>
-                    <input type="text" id="wallet-name-input" placeholder="e.g. Satoshi" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4">
-                    <button id="btn-create" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg">Create Individual Account</button>
-                    
-                    <div class="relative py-6">
-                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div>
-                        <div class="relative flex justify-center text-xs uppercase"><span class="bg-[#0a0a0a] px-2 text-gray-500">Restore Session</span></div>
-                    </div>
+            <div id="setup-view" class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Identity Name</label>
+                    <input type="text" id="wallet-name-input" placeholder="e.g. Satoshi" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-blue-500 transition-all text-white font-bold">
+                </div>
+                
+                <button id="btn-create" class="w-full btn-primary py-5 rounded-2xl font-black text-lg">Initialize New Vault</button>
+                
+                <div class="relative py-4">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/5"></div></div>
+                    <span class="relative bg-[#050505] px-4 mx-auto block w-max text-[10px] text-gray-600 font-black uppercase tracking-widest">or resume session</span>
+                </div>
 
-                    <input type="text" id="sync-code-input" placeholder="Enter Sync ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4 text-center font-mono">
-                    <button id="btn-sync" class="w-full bg-white/10 py-3 rounded-xl font-bold hover:bg-white/20">Login to Vault</button>
+                <div class="flex gap-3">
+                    <input type="text" id="sync-code-input" placeholder="Enter Sync ID" class="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-blue-500 transition-all text-white text-xs font-mono">
+                    <button id="btn-sync" class="bg-white/5 px-6 rounded-2xl border border-white/10 hover:bg-white/10 transition-all"><i class="fas fa-key"></i></button>
                 </div>
             </div>
 
-            <div id="auth-loading" class="hidden text-center">
-                <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-                <p id="loading-text" class="text-sm text-gray-400">Syncing with blockchain...</p>
+            <div id="auth-loading" class="hidden text-center py-10">
+                <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
+                <p class="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em]">Connecting to Mesh...</p>
             </div>
         </div>
 
-        <!-- MAIN APP -->
+        <!-- MAIN INTERFACE -->
         <div id="main-app" class="hidden flex-col h-full relative">
             
-            <div class="p-6 flex justify-between items-center flex-shrink-0">
-                <div class="flex items-center gap-3">
-                    <div id="user-avatar" class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold">U</div>
+            <header class="p-8 flex justify-between items-center z-40">
+                <div class="flex items-center gap-4">
+                    <div id="user-avatar" class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-lg font-black shadow-lg">?</div>
                     <div>
-                        <span id="display-wallet-name" class="font-bold text-sm block">Loading...</span>
-                        <span id="sync-code-display" class="text-[10px] text-blue-500 font-mono font-bold">ID: ...</span>
+                        <h4 id="display-wallet-name" class="font-black text-base leading-none mb-1">...</h4>
+                        <div class="flex items-center gap-2 cursor-pointer" onclick="copyId()">
+                            <span id="sync-code-display" class="text-[10px] text-gray-500 font-mono font-bold tracking-tighter">ID: ...</span>
+                            <i class="fas fa-copy text-[8px] text-gray-700"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-4 text-gray-400">
-                    <i class="fas fa-qrcode cursor-pointer hover:text-white" onclick="showModal('receive-modal')"></i>
-                    <i class="fas fa-power-off cursor-pointer hover:text-white" onclick="handleLogout()"></i>
+                <div class="flex items-center gap-3">
+                    <div class="h-8 px-3 rounded-full bg-green-500/10 border border-green-500/20 flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-[9px] font-black text-green-500 uppercase tracking-widest">Mesh</span>
+                    </div>
+                    <button onclick="handleLogout()" class="text-gray-600 hover:text-white transition-colors"><i class="fas fa-power-off"></i></button>
                 </div>
-            </div>
+            </header>
 
             <div class="scroll-container">
-                <!-- Balance Section -->
-                <div class="px-6 py-4">
-                    <span class="text-gray-400 text-sm font-medium">Available Balance</span>
-                    <h2 id="total-balance" class="text-4xl font-bold tracking-tight mt-1">$0.00</h2>
-                    <div class="flex items-center gap-2 mt-2">
-                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                        <span class="text-gray-500 text-xs font-medium">Live Cloud Sync</span>
+                <!-- Balance View -->
+                <div class="px-8 py-4">
+                    <div class="relative group">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                        <div class="relative glass p-10 rounded-[2.5rem] border border-white/10 overflow-hidden">
+                            <span class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 block">Available Assets</span>
+                            <h2 id="total-balance" class="text-5xl font-black tracking-tighter">$0.00</h2>
+                            <div class="mt-8 flex items-center gap-4">
+                                <div class="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div class="w-2/3 h-full bg-blue-500"></div>
+                                </div>
+                                <span class="text-[10px] font-bold text-blue-500">8.4% <i class="fas fa-caret-up"></i></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Action Grid -->
-                <div class="grid grid-cols-4 gap-4 px-6 py-6">
-                    <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="showModal('send-modal')">
-                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-paper-plane"></i></div>
-                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Send</span>
+                <!-- Fast Actions -->
+                <div class="flex justify-between px-10 py-10">
+                    <div onclick="showModal('send-modal')" class="flex flex-col items-center gap-3 cursor-pointer group">
+                        <div class="w-16 h-16 rounded-[1.5rem] glass flex items-center justify-center text-blue-500 text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-xl">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Send</span>
                     </div>
-                    <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="showModal('receive-modal')">
-                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-qrcode"></i></div>
-                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Receive</span>
+                    <div onclick="showModal('receive-modal')" class="flex flex-col items-center gap-3 cursor-pointer group">
+                        <div class="w-16 h-16 rounded-[1.5rem] glass flex items-center justify-center text-blue-500 text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-xl">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Receive</span>
                     </div>
-                    <div class="flex flex-col items-center gap-2 opacity-50 cursor-not-allowed">
-                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-repeat"></i></div>
-                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Swap</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2 opacity-50 cursor-not-allowed">
-                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-plus"></i></div>
-                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Add</span>
+                    <div onclick="showToast('Mesh Swap coming soon')" class="flex flex-col items-center gap-3 cursor-pointer group opacity-30">
+                        <div class="w-16 h-16 rounded-[1.5rem] glass flex items-center justify-center text-gray-400 text-2xl">
+                            <i class="fas fa-shuffle"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Swap</span>
                     </div>
                 </div>
 
-                <!-- History -->
-                <div class="px-6">
-                    <h3 class="font-bold text-lg mb-4">Activity</h3>
-                    <div id="history-list" class="space-y-3 pb-24">
-                        <!-- List populated by JS -->
+                <!-- Transactions -->
+                <div class="px-8">
+                    <h3 class="font-black text-lg tracking-tight mb-6">Activity Feed</h3>
+                    <div id="history-list" class="space-y-4">
+                        <!-- Items via JS -->
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Nav -->
-            <div class="fixed-nav glass h-20 px-10 flex justify-between items-center border-t border-white/10 bg-[#0a0a0a]/90 z-50">
-                <div class="flex flex-col items-center gap-1 text-blue-500 cursor-pointer">
-                    <i class="fas fa-wallet text-xl"></i>
-                    <span class="text-[10px] font-bold">Vault</span>
+            <div class="absolute bottom-0 left-0 right-0 h-28 glass rounded-t-[3rem] px-12 flex justify-between items-center z-50 border-t border-white/10">
+                <div class="text-blue-500 flex flex-col items-center gap-1">
+                    <i class="fas fa-wallet text-2xl"></i>
+                    <span class="text-[9px] font-black uppercase tracking-tighter">Vault</span>
                 </div>
-                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showToast('Market coming soon')">
-                    <i class="fas fa-chart-line text-xl"></i>
-                    <span class="text-[10px]">Market</span>
+                <div class="text-gray-600 flex flex-col items-center gap-1" onclick="showToast('Decentralized Nodes')">
+                    <i class="fas fa-server text-2xl"></i>
+                    <span class="text-[9px] font-black uppercase tracking-tighter">Nodes</span>
                 </div>
-                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showToast('Settings coming soon')">
-                    <i class="fas fa-cog text-xl"></i>
-                    <span class="text-[10px]">Settings</span>
+                <div class="text-gray-600 flex flex-col items-center gap-1" onclick="showToast('Identity Secure')">
+                    <i class="fas fa-shield text-2xl"></i>
+                    <span class="text-[9px] font-black uppercase tracking-tighter">Safety</span>
                 </div>
             </div>
         </div>
 
         <!-- SEND MODAL -->
-        <div id="send-modal" class="hidden absolute inset-0 z-[150] bg-[#0a0a0a] flex flex-col">
-            <div class="p-6 flex items-center gap-4 border-b border-white/5">
-                <i class="fas fa-arrow-left text-gray-400 cursor-pointer" onclick="hideModal('send-modal')"></i>
-                <h3 class="text-xl font-bold">Send Funds</h3>
+        <div id="send-modal" class="hidden absolute inset-0 z-[150] bg-[#050505] flex flex-col p-8">
+            <div class="flex items-center justify-between mb-12">
+                <button onclick="hideModal('send-modal')" class="w-12 h-12 rounded-2xl glass flex items-center justify-center text-gray-400"><i class="fas fa-arrow-left"></i></button>
+                <h3 class="text-xl font-black">Send Funds</h3>
+                <div class="w-12 h-12"></div>
             </div>
-            <div class="p-6 space-y-6">
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Recipient Sync ID</label>
-                    <input type="text" id="send-target-id" placeholder="Paste their Sync ID here" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 text-sm font-mono">
+            <div class="space-y-8">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-1">Recipient Peer ID</label>
+                    <input type="text" id="send-target-id" placeholder="Paste ID here" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-mono text-blue-400 outline-none">
                 </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Amount ($)</label>
-                    <input type="number" id="send-amount" placeholder="0.00" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 text-2xl font-bold">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-1">Amount ($)</label>
+                    <input type="number" id="send-amount" placeholder="0.00" class="w-full bg-transparent border-none text-5xl font-black outline-none placeholder:text-white/10">
                 </div>
-                <button id="btn-confirm-send" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg shadow-xl">Confirm Transfer</button>
-                <p class="text-[10px] text-gray-500 text-center">Cloud transfers are instant and irreversible.</p>
+                <button id="btn-confirm-send" class="w-full btn-primary py-6 rounded-3xl font-black text-lg shadow-2xl">Execute Transfer</button>
             </div>
         </div>
 
         <!-- RECEIVE MODAL -->
-        <div id="receive-modal" class="hidden absolute inset-0 z-[150] bg-black/95 flex items-center justify-center p-8">
-            <div class="w-full bg-[#111] p-8 rounded-3xl text-center border border-white/10">
-                <h3 class="font-bold text-xl mb-6">Your Sync ID</h3>
-                <div class="bg-white p-4 rounded-2xl inline-block mb-6">
-                    <i class="fas fa-qrcode text-8xl text-black"></i>
+        <div id="receive-modal" class="hidden absolute inset-0 z-[150] bg-black/95 flex items-center justify-center p-10">
+            <div class="w-full glass p-10 rounded-[3.5rem] text-center border border-white/10">
+                <div class="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white mx-auto mb-8 text-3xl shadow-2xl shadow-blue-600/30">
+                    <i class="fas fa-qrcode"></i>
                 </div>
-                <p class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">Personal Identification Code</p>
-                <div id="my-sync-id" class="text-sm font-mono font-bold text-blue-400 bg-blue-500/5 p-4 rounded-xl border border-blue-500/20 mb-6 break-all">...</div>
-                <button onclick="copyToClipboard('my-sync-id')" class="w-full btn-gradient py-4 rounded-xl font-bold text-sm mb-3">Copy Sync ID</button>
-                <button onclick="hideModal('receive-modal')" class="w-full text-gray-500 font-medium py-2">Close</button>
+                <h3 class="text-2xl font-black mb-4">Your Peer ID</h3>
+                <div id="my-sync-id" class="p-6 bg-white/5 rounded-3xl text-blue-400 font-mono text-[10px] break-all border border-white/10 mb-8 leading-relaxed tracking-wider">...</div>
+                <button onclick="copyId()" class="w-full btn-primary py-5 rounded-2xl font-black text-sm mb-6">Copy ID</button>
+                <button onclick="hideModal('receive-modal')" class="text-gray-500 font-black text-[10px] uppercase tracking-widest">Return to Vault</button>
             </div>
         </div>
 
     </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, arrayUnion, runTransaction } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+    <script>
+        // Use Gun.js for free sync (Community Relay)
+        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        
+        let currentUser = null;
+        let currentUserId = localStorage.getItem('nexus_uid');
 
-        // Firebase Setup
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-vault';
-
-        let currentUserData = null;
-        let currentUserId = null;
-
-        // UI Helpers
         const showToast = (msg) => {
             const t = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
@@ -238,201 +246,125 @@
 
         window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
         window.hideModal = (id) => document.getElementById(id).classList.add('hidden');
-        window.copyToClipboard = (id) => {
-            const text = document.getElementById(id).innerText;
+        window.copyId = () => {
             const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showToast("Copied to clipboard!");
+            el.value = currentUserId; document.body.appendChild(el); el.select();
+            document.execCommand('copy'); document.body.removeChild(el);
+            showToast("Peer ID Copied!");
         };
 
         window.handleLogout = () => {
-            if(confirm("Logout? Make sure you have your Sync ID saved!")) {
-                localStorage.removeItem('nexus_vault_user_id');
+            if(confirm("Disconnect? Make sure you have your ID saved!")) {
+                localStorage.removeItem('nexus_uid');
                 location.reload();
             }
         };
 
-        // Backend Core Functions
-        const initUser = async (name, existingId = null) => {
-            document.getElementById('setup-view').classList.add('hidden');
-            document.getElementById('auth-loading').classList.remove('hidden');
-
-            const uid = existingId || auth.currentUser.uid;
-            currentUserId = uid;
-            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
-            
-            try {
-                const snap = await getDoc(userRef);
-                if (!snap.exists()) {
-                    if (existingId) {
-                        showToast("Invalid Sync ID");
-                        resetAuthUI();
-                        return;
-                    }
-                    // Create new individual account
-                    await setDoc(userRef, {
-                        name: name || 'Anonymous User',
-                        balance: 1000.00, // Starting bonus
-                        history: [{ type: 'in', label: 'Welcome Bonus', amount: '1,000.00', date: new Date().toLocaleDateString() }],
-                        created: Date.now()
-                    });
-                }
-                
-                localStorage.setItem('nexus_vault_user_id', uid);
-                startSyncListener(uid);
-            } catch (e) {
-                showToast("Connection error");
-                resetAuthUI();
-            }
-        };
-
-        const resetAuthUI = () => {
-            document.getElementById('setup-view').classList.remove('hidden');
-            document.getElementById('auth-loading').classList.add('hidden');
-        };
-
-        const startSyncListener = (uid) => {
-            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
-            onSnapshot(userRef, (snapshot) => {
-                const data = snapshot.data();
-                if (data) {
-                    currentUserData = data;
-                    updateDashboard(uid, data);
-                }
-            }, (err) => showToast("Sync Error"));
-        };
-
-        const updateDashboard = (uid, data) => {
+        const renderUI = (id, data) => {
             document.getElementById('display-wallet-name').innerText = data.name;
             document.getElementById('user-avatar').innerText = data.name.charAt(0).toUpperCase();
-            document.getElementById('total-balance').innerText = `$${data.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('sync-code-display').innerText = `ID: ${uid.substring(0,8).toUpperCase()}...`;
-            document.getElementById('my-sync-id').innerText = uid;
+            document.getElementById('total-balance').innerText = `$${parseFloat(data.balance).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('sync-code-display').innerText = `ID: ${id.substring(0,12)}...`;
+            document.getElementById('my-sync-id').innerText = id;
 
             const list = document.getElementById('history-list');
             list.innerHTML = '';
-            [...data.history].reverse().forEach(tx => {
-                const isPlus = tx.type === 'in';
+            const history = data.history ? JSON.parse(data.history) : [];
+            [...history].reverse().forEach(tx => {
+                const isIn = tx.type === 'in';
                 list.innerHTML += `
-                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full ${isPlus ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} flex items-center justify-center">
-                                <i class="fas ${isPlus ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                    <div class="flex justify-between items-center p-5 glass rounded-3xl border border-white/5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-2xl ${isIn ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} flex items-center justify-center text-xs">
+                                <i class="fas ${isIn ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
                             </div>
                             <div>
-                                <div class="font-bold text-sm">${tx.label}</div>
-                                <div class="text-[10px] text-gray-500">${tx.date}</div>
+                                <div class="font-bold text-xs">${tx.label}</div>
+                                <div class="text-[9px] text-gray-600 font-black uppercase tracking-widest">${tx.date}</div>
                             </div>
                         </div>
-                        <div class="text-right font-bold ${isPlus ? 'text-green-500' : 'text-red-500'}">
-                            ${isPlus ? '+' : '-'}$${tx.amount}
+                        <div class="text-sm font-black ${isIn ? 'text-green-500' : 'text-red-500'}">
+                            ${isIn ? '+' : '-'}$${tx.amount}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
 
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('main-app').classList.replace('hidden', 'flex');
         };
 
-        // THE TRANSFER LOGIC (Peer-to-Peer)
-        const processTransfer = async () => {
+        const initVault = (name, id = null) => {
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('auth-loading').classList.remove('hidden');
+
+            const uid = id || 'nexus_' + Gun.text.random(16);
+            currentUserId = uid;
+            localStorage.setItem('nexus_uid', uid);
+
+            // Subscribe to Gun.js Mesh Node
+            const userRef = gun.get('nexus_vaults').get(uid);
+            
+            userRef.on((data) => {
+                if(data) {
+                    currentUser = data;
+                    renderUI(uid, data);
+                } else if(!id) {
+                    // Create new user if not exists
+                    userRef.put({
+                        name: name || 'Explorer',
+                        balance: 1000,
+                        history: JSON.stringify([{type:'in', label:'Mesh Node Bonus', amount:'1,000.00', date:'Genesis'}])
+                    });
+                } else {
+                    showToast("ID not found in Mesh");
+                    localStorage.removeItem('nexus_uid');
+                    location.reload();
+                }
+            });
+        };
+
+        const transfer = async () => {
             const targetId = document.getElementById('send-target-id').value.trim();
-            const amountStr = document.getElementById('send-amount').value;
-            const amount = parseFloat(amountStr);
+            const amount = parseFloat(document.getElementById('send-amount').value);
 
-            if (!targetId || targetId === currentUserId) {
-                showToast("Invalid Target ID");
-                return;
-            }
-            if (isNaN(amount) || amount <= 0 || amount > currentUserData.balance) {
-                showToast("Invalid Amount");
-                return;
+            if(!targetId || isNaN(amount) || amount <= 0 || amount > currentUser.balance) {
+                showToast("Check ID/Balance"); return;
             }
 
-            const btn = document.getElementById('btn-confirm-send');
-            btn.disabled = true;
-            btn.innerText = "Processing...";
+            const targetRef = gun.get('nexus_vaults').get(targetId);
+            
+            targetRef.once((tData) => {
+                if(!tData) { showToast("Recipient not in Mesh"); return; }
 
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const senderRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUserId);
-                    const receiverRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', targetId);
+                const date = new Date().toLocaleDateString();
+                const myHistory = JSON.parse(currentUser.history);
+                const tHistory = JSON.parse(tData.history);
 
-                    const receiverSnap = await transaction.get(receiverRef);
-                    if (!receiverSnap.exists()) {
-                        throw "User not found";
-                    }
+                myHistory.push({type:'out', label:`Transfer to ...${targetId.slice(-4)}`, amount: amount.toFixed(2), date});
+                tHistory.push({type:'in', label:`From ...${currentUserId.slice(-4)}`, amount: amount.toFixed(2), date});
 
-                    const senderSnap = await transaction.get(senderRef);
-                    const newSenderBal = senderSnap.data().balance - amount;
-                    const newReceiverBal = receiverSnap.data().balance + amount;
+                // Atomic-ish update via Gun
+                gun.get('nexus_vaults').get(currentUserId).put({
+                    balance: currentUser.balance - amount,
+                    history: JSON.stringify(myHistory)
+                });
 
-                    const date = new Date().toLocaleDateString();
-
-                    transaction.update(senderRef, {
-                        balance: newSenderBal,
-                        history: arrayUnion({ type: 'out', label: `Sent to ...${targetId.slice(-4)}`, amount: amount.toFixed(2), date })
-                    });
-
-                    transaction.update(receiverRef, {
-                        balance: newReceiverBal,
-                        history: arrayUnion({ type: 'in', label: `From ...${currentUserId.slice(-4)}`, amount: amount.toFixed(2), date })
-                    });
+                targetRef.put({
+                    balance: tData.balance + amount,
+                    history: JSON.stringify(tHistory)
                 });
 
                 showToast("Transfer Successful!");
                 hideModal('send-modal');
-                document.getElementById('send-target-id').value = '';
-                document.getElementById('send-amount').value = '';
-            } catch (e) {
-                showToast(e === "User not found" ? "Recipient ID not found" : "Transfer Failed");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Confirm Transfer";
-            }
+            });
         };
 
         // Bootstrap
-        const startup = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+        if(currentUserId) initVault(null, currentUserId);
 
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        const savedId = localStorage.getItem('nexus_vault_user_id');
-                        if (savedId) initUser(null, savedId);
-                    }
-                });
-            } catch (err) {
-                showToast("Server unreachable");
-            }
-        };
-
-        startup();
-
-        // Event Listeners
-        document.getElementById('btn-create').onclick = () => {
-            const name = document.getElementById('wallet-name-input').value.trim();
-            if (name) initUser(name);
-            else showToast("Enter a name");
-        };
-
-        document.getElementById('btn-sync').onclick = () => {
-            const code = document.getElementById('sync-code-input').value.trim();
-            if (code) initUser(null, code);
-            else showToast("Enter Sync ID");
-        };
-
-        document.getElementById('btn-confirm-send').onclick = processTransfer;
+        document.getElementById('btn-create').onclick = () => initVault(document.getElementById('wallet-name-input').value.trim());
+        document.getElementById('btn-sync').onclick = () => initVault(null, document.getElementById('sync-code-input').value.trim());
+        document.getElementById('btn-confirm-send').onclick = transfer;
 
     </script>
 </body>
