@@ -1,647 +1,497 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nexus Vault - Cloud Sync Active</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Nexus Vault</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        
+
         :root {
-            --bg-color: #050505;
-            --accent-blue: #3b82f6;
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
+            --blue: #3b82f6;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-color);
+            background: #000;
             color: white;
             margin: 0;
             height: 100vh;
-            width: 100%;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
         }
 
         .glass {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
         }
 
         .btn-gradient {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
 
-        .btn-gradient:active { transform: scale(0.94); opacity: 0.9; }
-
-        .view-container {
-            height: calc(100vh - 170px - var(--safe-bottom));
+        .view {
+            height: calc(100vh - 160px - var(--safe-bottom));
             overflow-y: auto;
-            padding-bottom: 60px;
-            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
+        .view::-webkit-scrollbar { display: none; }
 
-        .view-container::-webkit-scrollbar { display: none; }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+        .tab-active {
+            color: var(--blue) !important;
+            position: relative;
         }
-
-        .animate-view { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        
-        .tab-active { color: #3b82f6 !important; position: relative; }
         .tab-active::after {
             content: '';
             position: absolute;
-            bottom: -8px;
-            width: 4px;
-            height: 4px;
-            background: #3b82f6;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background: var(--blue);
             border-radius: 50%;
+            box-shadow: 0 0 10px var(--blue);
         }
 
-        .chart-bar {
-            width: 8px;
-            background: linear-gradient(to top, #3b82f6, rgba(59, 130, 246, 0.1));
-            border-radius: 12px;
-            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .nft-card {
+            aspect-ratio: 1/1;
+            background-size: cover;
+            background-position: center;
         }
 
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-animate { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 </head>
+
 <body class="flex justify-center items-center">
 
-    <div class="w-full max-w-md h-full bg-[#050505] relative flex flex-col shadow-2xl overflow-hidden">
-        
-        <!-- TOP ERROR BAR -->
-        <div id="schema-error" class="hidden absolute top-0 left-0 right-0 bg-red-600/90 backdrop-blur-md text-white px-4 py-3 z-[2000] text-center">
-            <p class="text-[10px] font-black tracking-widest uppercase">Sync Error: Database Disconnected</p>
+<div class="w-full max-w-md h-full bg-[#050505] shadow-2xl overflow-hidden relative flex flex-col border-x border-white/5">
+
+    <!-- ONBOARDING -->
+    <div id="onboard" class="absolute inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-10 hidden">
+        <div class="text-center mb-12">
+            <div class="w-24 h-24 bg-blue-600 rounded-[2.5rem] mx-auto mb-6 flex items-center justify-center text-4xl shadow-xl shadow-blue-500/20">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 class="text-5xl font-black mb-3 tracking-tighter italic">NEXUS</h1>
+            <p class="text-gray-400 text-sm">Secure Peer-to-Peer Network Architecture</p>
         </div>
 
-        <!-- ONBOARDING PAGE -->
-        <div id="onboarding-screen" class="hidden absolute inset-0 z-[1000] bg-[#050505] flex flex-col p-8 justify-center">
-            <div class="mb-16 text-center">
-                <div class="w-24 h-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center text-4xl shadow-2xl shadow-blue-500/40 mb-10 mx-auto rotate-12">
-                    <i class="fas fa-shield-halved text-white"></i>
-                </div>
-                <h1 class="text-5xl font-black tracking-tight mb-4">Nexus</h1>
-                <p class="text-gray-400 font-medium px-4">The most secure way to manage your multi-chain digital assets.</p>
+        <!-- Create Section -->
+        <div id="onboarding-main" class="w-full space-y-4">
+            <div class="glass p-4 rounded-3xl mb-2">
+                <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">Account Identity</p>
+                <input id="new-vault-name" placeholder="Enter Account Name..." class="bg-transparent w-full p-2 font-bold text-white outline-none border-b border-white/10 focus:border-blue-500 transition-colors" value="New Account"/>
             </div>
-            
-            <div id="onboarding-actions" class="space-y-4">
-                <button onclick="createNewAccount()" class="w-full btn-gradient py-5 rounded-3xl font-black text-lg text-white">Get Started</button>
-                <button onclick="showImportUI()" class="w-full glass py-5 rounded-3xl font-bold text-gray-300">I have a Nexus ID</button>
-            </div>
-
-            <div id="import-ui" class="hidden mt-8 animate-view">
-                <input id="import-id-input" type="text" placeholder="nx_..." class="w-full glass p-5 rounded-2xl outline-none font-mono text-sm text-blue-400 mb-3 border-blue-500/20">
-                <div class="flex gap-2">
-                    <button onclick="submitImport()" class="flex-1 bg-white text-black py-4 rounded-2xl font-black hover:bg-gray-100">Access Vault</button>
-                    <button onclick="hideImportUI()" class="px-6 glass rounded-2xl text-gray-400">Cancel</button>
-                </div>
-            </div>
+            <button class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mb-4 active:scale-95 transition-all" onclick="createNewWallet()">Create Account</button>
+            <button class="w-full py-5 rounded-3xl glass font-bold active:scale-95 transition-all" onclick="showImportBox()">Import Account</button>
         </div>
 
-        <!-- MAIN INTERFACE -->
-        <div id="main-wallet-interface" class="flex flex-col h-full opacity-0 transition-opacity duration-700">
-            
-            <!-- HEADER -->
-            <header class="pt-[calc(1.5rem+var(--safe-top))] px-6 pb-4 flex justify-between items-center z-50 bg-[#050505]/60 backdrop-blur-xl border-b border-white/5">
-                <div class="flex items-center gap-3">
-                    <div id="user-avatar" class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-black text-xs text-white shadow-lg uppercase">NX</div>
-                    <div>
-                        <p id="display-wallet-name" class="font-extrabold text-sm tracking-tight text-white/90">Main Vault</p>
-                        <div class="flex items-center gap-2">
-                            <span id="sync-dot" class="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse shadow-[0_0_8px_#eab308]"></span>
-                            <span id="connection-status" class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Syncing</span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="showModal('settings-modal')" class="w-11 h-11 glass rounded-2xl flex items-center justify-center text-gray-300 active:scale-90 transition-transform">
-                    <i class="fas fa-sliders text-sm"></i>
-                </button>
-            </header>
-
-            <!-- WALLET VIEW -->
-            <main id="view-wallet" class="view-container px-6 animate-view">
-                <section class="pt-8 pb-6">
-                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-2 opacity-60">Total Net Worth</p>
-                    <div class="flex items-baseline gap-3">
-                        <h2 id="total-balance-display" class="text-[2.75rem] font-black tracking-tighter leading-none">$0.00</h2>
-                        <button onclick="togglePrivacy()" class="p-2 -ml-1">
-                            <i id="privacy-toggle" class="far fa-eye text-gray-600 text-sm"></i>
-                        </button>
-                    </div>
-                    <div class="mt-4 flex items-center gap-2">
-                        <span class="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-black rounded-full">
-                            <i class="fas fa-arrow-trend-up"></i> 4.28%
-                        </span>
-                        <span class="text-[10px] text-gray-600 font-bold tracking-tight">Across 8 networks</span>
-                    </div>
-                </section>
-
-                <!-- QUICK ACTIONS -->
-                <nav class="grid grid-cols-4 gap-4 mb-10 pt-4">
-                    <button onclick="openAction('send', 'BTC')" class="flex flex-col items-center gap-2">
-                        <div class="w-[3.25rem] h-[3.25rem] rounded-2xl glass flex items-center justify-center text-blue-400 shadow-sm"><i class="fas fa-arrow-up text-lg"></i></div>
-                        <span class="text-[11px] font-extrabold text-gray-500">Send</span>
-                    </button>
-                    <button onclick="showModal('receive-modal')" class="flex flex-col items-center gap-2">
-                        <div class="w-[3.25rem] h-[3.25rem] rounded-2xl glass flex items-center justify-center text-emerald-400 shadow-sm"><i class="fas fa-qrcode text-lg"></i></div>
-                        <span class="text-[11px] font-extrabold text-gray-500">Receive</span>
-                    </button>
-                    <button onclick="showModal('swap-modal')" class="flex flex-col items-center gap-2">
-                        <div class="w-[3.25rem] h-[3.25rem] rounded-2xl glass flex items-center justify-center text-orange-400 shadow-sm"><i class="fas fa-repeat text-lg"></i></div>
-                        <span class="text-[11px] font-extrabold text-gray-500">Swap</span>
-                    </button>
-                    <button onclick="showStatus('Fiat Ramp coming soon')" class="flex flex-col items-center gap-2">
-                        <div class="w-[3.25rem] h-[3.25rem] rounded-2xl glass flex items-center justify-center text-purple-400 shadow-sm"><i class="fas fa-wallet text-lg"></i></div>
-                        <span class="text-[11px] font-extrabold text-gray-500">Buy</span>
-                    </button>
-                </nav>
-
-                <section>
-                    <div class="flex justify-between items-end mb-4">
-                        <h3 class="text-xl font-black tracking-tight">Portfolio</h3>
-                        <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Edit List</span>
-                    </div>
-                    <div id="assets-list" class="space-y-3"></div>
-                </section>
-
-                <section class="mt-12">
-                    <h3 class="text-xl font-black tracking-tight mb-4">Recent Activity</h3>
-                    <div id="history-list" class="space-y-3"></div>
-                </section>
-            </main>
-
-            <!-- MARKET VIEW -->
-            <main id="view-stats" class="view-container px-6 hidden animate-view">
-                <h3 class="text-3xl font-black mt-8 mb-6">Markets</h3>
-                <div class="space-y-4">
-                    <div class="glass p-6 rounded-[2rem] border-white/10 shadow-xl">
-                        <div class="flex justify-between items-center mb-6">
-                            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Global Trend</p>
-                            <span class="text-[10px] font-black text-emerald-400 px-2 py-1 bg-emerald-500/10 rounded-md">BULLISH</span>
-                        </div>
-                        <div id="chart-container" class="h-28 flex items-end justify-between gap-1.5 px-1">
-                            <!-- JS Bars -->
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="glass p-5 rounded-[1.75rem]">
-                            <p class="text-[10px] text-gray-500 font-black uppercase mb-1">Fear & Greed</p>
-                            <p class="text-2xl font-black text-orange-400">74 <span class="text-xs opacity-60">Greed</span></p>
-                        </div>
-                        <div class="glass p-5 rounded-[1.75rem]">
-                            <p class="text-[10px] text-gray-500 font-black uppercase mb-1">ETH Gas</p>
-                            <p id="gas-display" class="text-2xl font-black text-blue-400">24 <span class="text-xs opacity-60 font-mono">GWEI</span></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-10">
-                    <h3 class="text-lg font-black mb-4 flex items-center gap-2"><i class="fas fa-fire text-orange-500"></i> Trending Assets</h3>
-                    <div id="trending-list" class="space-y-3"></div>
-                </div>
-            </main>
-
-            <!-- BROWSER VIEW -->
-            <main id="view-browser" class="view-container px-6 hidden animate-view">
-                <div class="mt-8 mb-8 flex items-center glass p-4 rounded-2xl gap-3 border-white/10">
-                    <i class="fas fa-search text-gray-500 ml-1"></i>
-                    <input type="text" placeholder="Search or type URL..." class="bg-transparent border-none outline-none text-sm w-full text-white placeholder-gray-600">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <button class="glass p-6 rounded-3xl flex flex-col items-center gap-4 active:scale-95 transition-all">
-                        <div class="w-14 h-14 rounded-2xl bg-[#ff007a]/15 flex items-center justify-center text-[#ff007a]"><i class="fas fa-layer-group text-2xl"></i></div>
-                        <span class="text-xs font-black">Uniswap</span>
-                    </button>
-                    <button class="glass p-6 rounded-3xl flex flex-col items-center gap-4 active:scale-95 transition-all">
-                        <div class="w-14 h-14 rounded-2xl bg-[#2ebd85]/15 flex items-center justify-center text-[#2ebd85]"><i class="fas fa-chart-pie text-2xl"></i></div>
-                        <span class="text-xs font-black">Pancake</span>
-                    </button>
-                    <button class="glass p-6 rounded-3xl flex flex-col items-center gap-4 active:scale-95 transition-all">
-                        <div class="w-14 h-14 rounded-2xl bg-[#2081e2]/15 flex items-center justify-center text-[#2081e2]"><i class="fas fa-image text-2xl"></i></div>
-                        <span class="text-xs font-black">OpenSea</span>
-                    </button>
-                    <button class="glass p-6 rounded-3xl flex flex-col items-center gap-4 active:scale-95 transition-all">
-                        <div class="w-14 h-14 rounded-2xl bg-blue-300/15 flex items-center justify-center text-blue-300"><i class="fas fa-droplet text-2xl"></i></div>
-                        <span class="text-xs font-black">Lido</span>
-                    </button>
-                </div>
-            </main>
-
-            <!-- FOOTER NAV -->
-            <footer class="absolute bottom-0 left-0 right-0 h-[calc(85px+var(--safe-bottom))] glass border-t border-white/10 px-10 flex justify-between items-center pb-[var(--safe-bottom)]">
-                <button onclick="switchTab('wallet')" id="tab-wallet" class="flex flex-col items-center gap-1.5 tab-active text-blue-500">
-                    <i class="fas fa-wallet text-xl"></i>
-                    <span class="text-[10px] font-black uppercase tracking-wider">Wallet</span>
-                </button>
-                <button onclick="switchTab('stats')" id="tab-stats" class="flex flex-col items-center gap-1.5 text-gray-500">
-                    <i class="fas fa-chart-line text-xl"></i>
-                    <span class="text-[10px] font-black uppercase tracking-wider">Market</span>
-                </button>
-                <button onclick="switchTab('browser')" id="tab-browser" class="flex flex-col items-center gap-1.5 text-gray-500">
-                    <i class="fas fa-compass text-xl"></i>
-                    <span class="text-[10px] font-black uppercase tracking-wider">Browser</span>
-                </button>
-            </footer>
-        </div>
-
-        <!-- MODALS -->
-        <div id="settings-modal" class="hidden fixed inset-0 z-[150] bg-black/95 backdrop-blur-xl flex items-end sm:items-center justify-center">
-            <div class="w-full max-w-md glass p-8 rounded-t-[3rem] sm:rounded-[3rem] border-t border-white/10">
-                <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8 sm:hidden"></div>
-                <h3 class="text-2xl font-black mb-8">Preferences</h3>
-                <div class="space-y-6 mb-10">
-                    <div>
-                        <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-3">Vault Identity</label>
-                        <input id="edit-vault-name" type="text" class="w-full glass p-5 rounded-2xl outline-none font-bold text-white border-white/5 focus:border-blue-500/50">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-3">Nexus ID</label>
-                        <div class="flex gap-2">
-                            <input id="secret-key-display" type="text" readonly class="flex-1 glass p-5 rounded-2xl font-mono text-[11px] text-blue-400 border-white/5">
-                            <button onclick="copySecretKey()" class="w-14 glass rounded-2xl flex items-center justify-center text-gray-400 active:text-white"><i class="fas fa-copy"></i></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <button onclick="updateSettings()" class="w-full btn-gradient py-5 rounded-[1.75rem] font-black text-lg">Save Changes</button>
-                    <button onclick="logout()" class="w-full py-2 text-red-500 text-xs font-black uppercase tracking-widest opacity-80">Wipe Local Storage</button>
-                    <button onclick="hideModal('settings-modal')" class="w-full py-2 text-gray-500 text-xs font-bold uppercase tracking-widest">Cancel</button>
-                </div>
+        <div id="import-box" class="hidden w-full mt-6 animate-fadeIn">
+            <input id="import-id" placeholder="Enter Secret Key or Address..." class="glass w-full p-4 rounded-2xl font-mono text-blue-400 outline-none mb-3 border-white/10"/>
+            <p class="text-[10px] text-gray-500 mb-3 px-2">Tip: Use 'MASTER_ADMIN_2024' for the master account.</p>
+            <div class="flex gap-2">
+                <button class="flex-1 glass py-4 rounded-2xl font-black text-gray-400" onclick="hideImportBox()">Back</button>
+                <button class="flex-[2] glass py-4 rounded-2xl font-black text-blue-500" onclick="importWallet()">Sync Account</button>
             </div>
         </div>
-
-        <!-- SWAP MODAL -->
-        <div id="swap-modal" class="hidden fixed inset-0 z-[150] bg-black/95 flex flex-col p-6 pb-12">
-            <div class="flex items-center justify-between mb-8 mt-[var(--safe-top)]">
-                <button onclick="hideModal('swap-modal')" class="w-11 h-11 glass rounded-2xl flex items-center justify-center"><i class="fas fa-times"></i></button>
-                <h2 class="font-black text-xl tracking-tight">Nexus Swap</h2>
-                <div class="w-11"></div>
-            </div>
-            <div class="glass p-6 rounded-[2rem] border-white/10 mb-4 shadow-xl">
-                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sell</label>
-                <div class="flex justify-between items-center mt-3">
-                    <select id="swap-from" class="bg-transparent font-black text-2xl outline-none text-white appearance-none" onchange="calculateSwap()"></select>
-                    <input type="number" id="swap-from-amount" value="1" class="bg-transparent text-right font-black text-3xl w-1/2 outline-none text-white" oninput="calculateSwap()">
-                </div>
-                <p id="from-bal-hint" class="text-[10px] text-gray-600 font-bold mt-2">Balance: 0.00</p>
-            </div>
-            <div class="flex justify-center -my-6 relative z-10">
-                <button onclick="flipSwap()" class="w-14 h-14 bg-blue-600 rounded-[1.25rem] flex items-center justify-center border-[6px] border-[#050505] shadow-2xl active:rotate-180 transition-transform duration-500">
-                    <i class="fas fa-exchange-alt fa-rotate-90 text-white"></i>
-                </button>
-            </div>
-            <div class="glass p-6 rounded-[2rem] border-white/10 mb-8 shadow-xl">
-                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Buy</label>
-                <div class="flex justify-between items-center mt-3">
-                    <select id="swap-to" class="bg-transparent font-black text-2xl outline-none text-white appearance-none" onchange="calculateSwap()"></select>
-                    <input type="text" id="swap-to-amount" readonly class="bg-transparent text-right font-black text-3xl w-1/2 outline-none text-blue-400" value="0.00">
-                </div>
-            </div>
-            <button onclick="executeSwap()" class="w-full btn-gradient py-5 rounded-[2rem] font-black text-xl mt-auto">Confirm Swap</button>
-        </div>
-
-        <!-- RECEIVE MODAL -->
-        <div id="receive-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-end sm:items-center justify-center">
-            <div class="w-full max-w-md glass p-10 rounded-t-[3.5rem] sm:rounded-[3.5rem] text-center">
-                <div class="w-32 h-32 bg-white rounded-3xl mx-auto mb-8 flex items-center justify-center p-3 shadow-2xl">
-                    <i class="fas fa-qrcode text-black text-7xl"></i>
-                </div>
-                <h3 class="text-3xl font-black mb-3">Deposit Assets</h3>
-                <p class="text-gray-500 text-sm font-medium mb-8">Send any supported asset to your unique Nexus ID below.</p>
-                <div class="bg-white/5 border border-white/10 p-5 rounded-2xl font-mono text-xs text-blue-400 break-all mb-10 select-all" id="addr-txt"></div>
-                <button onclick="hideModal('receive-modal')" class="w-full btn-gradient py-5 rounded-[2rem] font-black text-lg">I've Sent It</button>
-            </div>
-        </div>
-        
-        <!-- PROGRESS/SUCCESS -->
-        <div id="progress-modal" class="hidden fixed inset-0 z-[200] bg-[#050505] flex flex-col items-center justify-center p-12 text-center">
-            <div id="loader-ring-container" class="w-24 h-24 mb-10 relative flex items-center justify-center">
-                <div id="loader-ring" class="absolute inset-0 border-[6px] border-blue-500/10 border-t-blue-500 rounded-full animate-spin"></div>
-                <div id="success-icon" class="hidden text-emerald-400 text-5xl"><i class="fas fa-check-circle"></i></div>
-            </div>
-            <h2 id="progress-status" class="text-3xl font-black mb-4 tracking-tight">Syncing Node...</h2>
-            <p id="progress-sub" class="text-gray-500 font-medium">Communicating with Nexus Chain Validators.</p>
-            <button id="success-close" class="hidden mt-12 w-full glass py-5 rounded-[2rem] font-black text-lg border-emerald-500/20 text-emerald-400" onclick="hideModal('progress-modal'); renderUI();">Continue</button>
-        </div>
-
-        <!-- TRANSFER MODAL -->
-        <div id="transfer-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col">
-            <div class="px-6 py-6 flex items-center justify-between mt-[var(--safe-top)]">
-                <button onclick="hideModal('transfer-modal')" class="w-11 h-11 rounded-2xl glass flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-chevron-left"></i></button>
-                <h2 class="font-black text-lg">Withdraw Asset</h2>
-                <div class="w-11"></div>
-            </div>
-            <div class="p-6 flex-1 flex flex-col">
-                <div class="glass p-5 rounded-3xl mb-6 flex justify-between items-center border-white/10 shadow-lg">
-                    <div class="flex items-center gap-4">
-                        <div id="sel-icon" class="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-inner"></div>
-                        <div>
-                            <span id="sel-name" class="font-black block text-sm"></span>
-                            <span id="sel-available" class="text-[10px] text-gray-500 font-extrabold uppercase tracking-tight"></span>
-                        </div>
-                    </div>
-                </div>
-                <input id="recipient-address" type="text" placeholder="Recipient Nexus ID" class="glass p-5 rounded-2xl w-full outline-none text-sm mb-6 border-white/5 focus:border-blue-500/30 transition-colors">
-                <div class="flex-1 flex flex-col justify-center">
-                    <input id="transfer-amount" type="number" placeholder="0.00" class="w-full text-center text-7xl font-black outline-none bg-transparent py-4 text-white">
-                </div>
-                <button onclick="initiateTransfer()" class="w-full btn-gradient py-5 rounded-[2rem] font-black text-xl text-white mb-[var(--safe-bottom)]">Broadcast Transaction</button>
-            </div>
-        </div>
-
     </div>
 
-    <script>
-        const SB_URL = "https://tmvimacikrnrizxtcesf.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtdmltYWNpa3Jucml6eHRjZXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDc5NzgsImV4cCI6MjA4MzY4Mzk3OH0.dwh4CWwxE53hbhgjYqOqHZYa1tNyUKNZvdb6Kq5pLC4";
-        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    <!-- MAIN UI -->
+    <div id="app" class="hidden flex flex-col h-full">
 
-        let walletId = localStorage.getItem('nexus_wallet_id');
-        let selectedAssetKey = 'BTC';
-        
-        let userData = {
-            walletName: "Main Vault",
-            privacyMode: false,
-            history: [],
-            balances: {
-                "BTC": { name: "Bitcoin", amount: 0.125, color: "orange-500", icon: "fa-bitcoin", rate: 64230 },
-                "ETH": { name: "Ethereum", amount: 2.45, color: "indigo-500", icon: "fa-ethereum", rate: 3450 },
-                "SOL": { name: "Solana", amount: 125, color: "emerald-400", icon: "fa-bolt", rate: 142.50 },
-                "USDC": { name: "USD Coin", amount: 1200, color: "blue-500", icon: "fa-dollar-sign", rate: 1 },
-                "ADA": { name: "Cardano", amount: 1500, color: "blue-600", icon: "fa-adn", rate: 0.45 },
-                "DOT": { name: "Polkadot", amount: 85, color: "pink-500", icon: "fa-circle-nodes", rate: 7.20 },
-                "AVAX": { name: "Avalanche", amount: 42, color: "red-500", icon: "fa-mountain", rate: 35.80 },
-                "NEAR": { name: "Near", amount: 240, color: "gray-300", icon: "fa-n", rate: 6.90 }
-            }
-        };
+        <!-- HEADER -->
+        <header class="p-6 pt-[calc(1.5rem+var(--safe-top))] glass flex justify-between items-center border-b border-white/5">
+            <div>
+                <p id="wallet-name" class="font-black text-xl tracking-tight">Account</p>
+                <div class="text-[10px] text-emerald-500 flex items-center gap-1 font-bold uppercase tracking-widest">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Network Synced
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="copyAddress()" class="glass w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all">
+                    <i class="fa-regular fa-copy text-gray-400"></i>
+                </button>
+                <button onclick="toggleModal('settings-modal')" class="glass w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all">
+                    <i class="fa-solid fa-sliders text-gray-400"></i>
+                </button>
+            </div>
+        </header>
 
-        function renderUI() {
-            document.getElementById('display-wallet-name').innerText = userData.walletName;
-            document.getElementById('secret-key-display').value = walletId || '';
-            document.getElementById('addr-txt').innerText = walletId || 'nx_loading...';
-            document.getElementById('edit-vault-name').value = userData.walletName;
+        <!-- VIEW: WALLET -->
+        <main id="wallet-view" class="view px-6 pt-6 active-view">
+            <p class="uppercase text-gray-600 text-[10px] font-black tracking-[0.2em] mb-1">Portfolio Value</p>
+            <div class="flex items-end gap-3 mb-8">
+                <h1 id="total" class="text-5xl font-black tracking-tighter">$0.00</h1>
+                <button onclick="togglePrivacy()" class="mb-2 text-gray-500"><i id="privacy-icon" class="fa-regular fa-eye"></i></button>
+            </div>
 
-            const list = document.getElementById('assets-list');
-            list.innerHTML = '';
-            let total = 0;
-            
-            Object.keys(userData.balances).forEach(key => {
-                const a = userData.balances[key];
-                const val = a.amount * a.rate;
-                total += val;
-                list.innerHTML += `
-                    <div class="glass p-4 rounded-[1.75rem] flex justify-between items-center active:bg-white/10 transition-all border-white/5" onclick="openAction('send', '${key}')">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-${a.color}/10 text-${a.color} rounded-2xl flex items-center justify-center shadow-inner"><i class="fab ${a.icon} text-xl"></i></div>
-                            <div>
-                                <p class="font-black text-[15px] tracking-tight">${key}</p>
-                                <p class="text-[11px] text-gray-500 font-bold">${a.amount.toLocaleString(undefined, {maximumFractionDigits: 4})} ${key}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-black text-[15px] tracking-tight">${userData.privacyMode ? '••••' : '$'+val.toLocaleString(undefined, {maximumFractionDigits: 2})}</p>
-                            <p class="text-[10px] text-emerald-500 font-black">+$${(val*0.04).toFixed(2)}</p>
-                        </div>
-                    </div>`;
-            });
-            document.getElementById('total-balance-display').innerText = userData.privacyMode ? '••••' : '$'+total.toLocaleString(undefined, {maximumFractionDigits: 2});
-            
-            const hList = document.getElementById('history-list');
-            if (userData.history.length === 0) {
-                hList.innerHTML = '<div class="text-center py-10 glass rounded-3xl text-[11px] text-gray-600 font-black uppercase tracking-widest">No Recent Chain Activity</div>';
-            } else {
-                hList.innerHTML = [...userData.history].reverse().slice(0, 5).map(h => `
-                    <div class="glass p-4 rounded-2xl flex justify-between items-center opacity-80 border-white/5">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full glass flex items-center justify-center text-xs">
-                                <i class="fas ${h.type === 'Swap' ? 'fa-sync text-orange-400' : 'fa-arrow-up text-blue-400'}"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs font-black">${h.type || 'Send'} ${h.asset}</p>
-                                <p class="text-[9px] text-gray-500 font-bold">${new Date(h.date).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <p class="text-xs font-mono font-black text-white/90">-${h.amount} ${h.asset}</p>
+            <div class="grid grid-cols-4 gap-3 mb-10">
+                <button onclick="openSendModal()" class="flex flex-col items-center">
+                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-blue-400"><i class="fa-solid fa-arrow-up"></i></div>
+                    <span class="text-[10px] mt-2 font-black opacity-60">SEND</span>
+                </button>
+                <button onclick="copyAddress()" class="flex flex-col items-center">
+                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-emerald-400"><i class="fa-solid fa-qrcode"></i></div>
+                    <span class="text-[10px] mt-2 font-black opacity-60">RECEIVE</span>
+                </button>
+                <button onclick="switchTab('market')" class="flex flex-col items-center">
+                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-orange-400"><i class="fa-solid fa-repeat"></i></div>
+                    <span class="text-[10px] mt-2 font-black opacity-60">SWAP</span>
+                </button>
+                <button onclick="switchTab('nfts')" class="flex flex-col items-center">
+                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-purple-400"><i class="fa-solid fa-shapes"></i></div>
+                    <span class="text-[10px] mt-2 font-black opacity-60">NFTS</span>
+                </button>
+            </div>
+
+            <div id="assets" class="space-y-3"></div>
+
+            <h2 class="mt-10 font-black text-lg tracking-tight flex items-center justify-between">
+                Network Activity
+                <i class="fa-solid fa-chevron-right text-[10px] opacity-30"></i>
+            </h2>
+            <div id="history" class="mt-4 pb-24 space-y-3"></div>
+        </main>
+
+        <!-- MARKET VIEW -->
+        <main id="market-view" class="view px-6 pt-6 hidden">
+            <h2 class="text-3xl font-black mb-6">Market</h2>
+            <div id="market-list" class="space-y-4 pb-24"></div>
+        </main>
+
+        <!-- NFT VIEW -->
+        <main id="nfts-view" class="view px-6 pt-6 hidden">
+            <h2 class="text-3xl font-black mb-6">Collectibles</h2>
+            <div class="grid grid-cols-2 gap-4 pb-24">
+                <div class="glass p-2 rounded-[2rem]">
+                    <div class="nft-card rounded-[1.5rem] mb-3 bg-gradient-to-br from-purple-600 to-blue-600"></div>
+                    <p class="px-2 font-bold text-xs">Nexus Punk #402</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- NEWS VIEW -->
+        <main id="news-view" class="view px-6 pt-6 hidden">
+            <h2 class="text-3xl font-black mb-6">Insights</h2>
+            <div id="news-list" class="space-y-4 pb-24">
+                <div class="glass p-5 rounded-3xl border-blue-500/20">
+                    <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">System Message</span>
+                    <p class="font-bold mt-2">P2P Transfers between accounts are now zero-fee.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- TAB BAR -->
+        <footer class="absolute bottom-0 left-0 right-0 h-20 glass px-6 flex justify-between items-center pb-[var(--safe-bottom)] border-t border-white/5">
+            <button class="nav tab-active flex flex-col items-center flex-1" onclick="switchTab('wallet')">
+                <i class="fa-solid fa-wallet text-xl"></i>
+                <div class="text-[9px] mt-1 font-black uppercase opacity-60">Asset</div>
+            </button>
+            <button class="nav text-gray-500 flex flex-col items-center flex-1" onclick="switchTab('market')">
+                <i class="fa-solid fa-chart-line text-xl"></i>
+                <div class="text-[9px] mt-1 font-black uppercase opacity-60">Market</div>
+            </button>
+            <button class="nav text-gray-500 flex flex-col items-center flex-1" onclick="switchTab('nfts')">
+                <i class="fa-solid fa-layer-group text-xl"></i>
+                <div class="text-[9px] mt-1 font-black uppercase opacity-60">NFTs</div>
+            </button>
+            <button class="nav text-gray-500 flex flex-col items-center flex-1" onclick="switchTab('news')">
+                <i class="fa-solid fa-rss text-xl"></i>
+                <div class="text-[9px] mt-1 font-black uppercase opacity-60">News</div>
+            </button>
+        </footer>
+    </div>
+
+    <!-- MODAL: SEND -->
+    <div id="send-modal" class="fixed inset-0 z-[200] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleModal('send-modal')"></div>
+        <div class="absolute bottom-0 left-0 right-0 glass rounded-t-[3rem] p-8 modal-animate pb-[calc(2rem+var(--safe-bottom))]">
+            <h3 class="text-2xl font-black mb-6">P2P Transfer</h3>
+            <div class="space-y-4">
+                <div class="glass p-4 rounded-2xl">
+                    <p class="text-[10px] font-black opacity-40 mb-1">RECEIVING ACCOUNT ID</p>
+                    <input id="send-to" placeholder="bc1q..." class="bg-transparent w-full font-mono text-blue-400 outline-none text-sm" />
+                </div>
+                <div class="glass p-4 rounded-2xl">
+                    <p class="text-[10px] font-black opacity-40 mb-1">AMOUNT TO BROADCAST</p>
+                    <div class="flex justify-between items-center">
+                        <input id="send-amt" type="number" placeholder="0.00" class="bg-transparent w-1/2 font-black text-2xl outline-none" />
+                        <select id="send-asset" class="bg-transparent font-black text-blue-400 outline-none">
+                            <option value="BTC">BTC</option>
+                            <option value="ETH">ETH</option>
+                            <option value="USDT">USDT</option>
+                        </select>
                     </div>
-                `).join('');
+                </div>
+                <button id="send-btn" class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mt-4" onclick="executeP2PTransfer()">Authorize Transfer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SETTINGS -->
+    <div id="settings-modal" class="fixed inset-0 z-[200] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleModal('settings-modal')"></div>
+        <div class="absolute bottom-0 left-0 right-0 glass rounded-t-[3rem] p-8 modal-animate pb-[calc(2rem+var(--safe-bottom))]">
+            <h3 class="text-2xl font-black mb-6">Account Config</h3>
+            <div class="space-y-3">
+                <button onclick="copyAddress()" class="w-full glass p-5 rounded-2xl flex justify-between font-bold text-blue-400">
+                    Account ID: <span class="opacity-50 font-mono text-xs" id="display-id">...</span>
+                </button>
+                <button onclick="logout()" class="w-full glass p-5 rounded-2xl flex justify-between font-bold text-red-400">
+                    Sign Out <i class="fa-solid fa-power-off opacity-40"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- TOASTS -->
+<div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[300] w-full max-w-[280px] space-y-2 pointer-events-none"></div>
+
+<script>
+const SUPABASE_URL = "https://tmvimacikrnrizxtcesf.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtdmltYWNpa3Jucml6eHRjZXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDc5NzgsImV4cCI6MjA4MzY4Mzk3OH0.dwh4CWwxE53hbhgjYqOqHZYa1tNyUKNZvdb6Kq5pLC4";
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const MASTER_KEY = "MASTER_ADMIN_2024";
+
+let walletId = localStorage.getItem("nexus_wallet");
+let privacy = false;
+let user = {
+    name: "Standard Account",
+    balances : {
+        BTC: {amount:0, rate:67000, icon:"fa-brands fa-bitcoin", color:"text-orange-400"},
+        ETH: {amount:0, rate:3500, icon:"fa-brands fa-ethereum", color:"text-indigo-400"},
+        USDT:{amount:0, rate:1, icon:"fa-solid fa-dollar-sign", color:"text-green-400"},
+    },
+    history:[]
+};
+
+// INITIALIZE MASTER ACCOUNT
+const masterProfile = {
+    name: "Master Nexus Account",
+    balances: {
+        BTC: {amount:10, rate:67000, icon:"fa-brands fa-bitcoin", color:"text-orange-400"},
+        ETH: {amount:50, rate:3500, icon:"fa-brands fa-ethereum", color:"text-indigo-400"},
+        USDT:{amount:130000, rate:1, icon:"fa-solid fa-dollar-sign", color:"text-green-400"},
+    },
+    history:[]
+};
+
+window.onload = async () => {
+    if (!walletId) {
+        document.getElementById("onboard").classList.remove("hidden");
+    } else {
+        showApp();
+        await loadWallet();
+        initRealtime();
+    }
+};
+
+async function createNewWallet() {
+    const nameInput = document.getElementById("new-vault-name").value.trim();
+    if (!nameInput) return showToast("Please name your account");
+
+    const chars = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+    let addr = "bc1q";
+    for (let i=0;i<38;i++) addr += chars[Math.floor(Math.random()*chars.length)];
+    
+    walletId = addr;
+    user.name = nameInput;
+
+    localStorage.setItem("nexus_wallet", addr);
+    await db.from("wallets").insert({ id: addr, data: user });
+    
+    showApp();
+    showToast(`Account "${nameInput}" Created`);
+}
+
+async function loadWallet(){
+    try {
+        let {data} = await db.from("wallets").select("data").eq("id", walletId).single();
+        if (data) {
+            user = data.data;
+        } else if (walletId === MASTER_KEY) {
+            user = masterProfile;
+            await db.from("wallets").insert({ id: MASTER_KEY, data: user });
+        }
+        render();
+    } catch(e) { render(); }
+}
+
+function initRealtime(){
+    db.channel("vault_sync").on("postgres_changes",
+        {event:"*", schema:"public", table:"wallets"},
+        async (p) => { 
+            if(p.new && p.new.id === walletId) {
+                user = p.new.data;
+                render();
             }
         }
+    ).subscribe();
+}
 
-        async function syncToCloud() {
-            if (!walletId) return;
-            try {
-                await supabaseClient.from('wallets').upsert({ id: walletId, vault_data: userData, updated_at: new Date() });
-                updateSyncStatus("Synced", "bg-emerald-500 shadow-[0_0_8px_#10b981]");
-            } catch (err) { 
-                console.error(err); 
-                updateSyncStatus("Offline", "bg-red-500");
-            }
+function render(){
+    document.getElementById("wallet-name").innerText = user.name;
+    document.getElementById("display-id").innerText = walletId.substring(0,10)+"...";
+    
+    let total = 0;
+    for (let k in user.balances) total += user.balances[k].amount * user.balances[k].rate;
+    document.getElementById("total").innerText = privacy ? "••••••" : "$" + total.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+    document.getElementById("assets").innerHTML = Object.entries(user.balances).map(([k,v])=>`
+        <div class="glass p-4 rounded-3xl flex justify-between items-center border-white/5">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
+                    <i class="${v.icon} text-2xl ${v.color}"></i>
+                </div>
+                <div>
+                    <p class="font-black text-sm">${k}</p>
+                    <p class="text-[10px] opacity-40 font-bold uppercase tracking-wider">${v.amount.toFixed(4)} ${k}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="font-black text-sm">${privacy?"••••":"$"+(v.amount*v.rate).toLocaleString()}</p>
+            </div>
+        </div>
+    `).join("");
+
+    document.getElementById("history").innerHTML = (user.history && user.history.length) ? 
+    user.history.slice(-15).reverse().map(h => `
+        <div class="glass p-4 rounded-2xl flex justify-between items-center text-[11px] border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                    <i class="fa-solid ${h.type==='Sent'?'fa-arrow-up text-red-400':'fa-arrow-down text-emerald-400'}"></i>
+                </div>
+                <div>
+                    <p class="font-black">${h.type} ${h.asset}</p>
+                    <p class="opacity-30">P2P: ${h.party.substring(0,8)}...</p>
+                </div>
+            </div>
+            <p class="font-black ${h.type==='Sent'?'text-red-400':'text-emerald-400'}">
+                ${h.type==='Sent'?'-':'+'}${h.amount}
+            </p>
+        </div>
+    `).join("") : `<p class="text-center py-10 opacity-20 text-xs font-black italic">NO NETWORK ACTIVITY</p>`;
+
+    document.getElementById("market-list").innerHTML = [
+        {id:'BTC', p:67000, c:'+1.2%'}, {id:'ETH', p:3500, c:'+0.8%'}, {id:'USDT', p:1.00, c:'0.0%'}
+    ].map(m => `
+        <div class="glass p-5 rounded-3xl flex justify-between items-center border-white/5">
+            <span class="font-bold">${m.id} / USD</span>
+            <div class="text-right">
+                <p class="font-black">$${m.p.toLocaleString()}</p>
+                <p class="text-[10px] text-emerald-400 font-bold">${m.c}</p>
+            </div>
+        </div>
+    `).join("");
+}
+
+async function executeP2PTransfer(){
+    const btn = document.getElementById('send-btn');
+    let toId = document.getElementById('send-to').value.trim();
+    let amt = parseFloat(document.getElementById('send-amt').value);
+    let asset = document.getElementById('send-asset').value;
+
+    if(!toId || isNaN(amt) || amt <= 0) return showToast("Invalid Inputs");
+    if(user.balances[asset].amount < amt) return showToast("Balance too low");
+    if(toId === walletId) return showToast("Cannot send to self");
+
+    btn.disabled = true;
+    btn.innerText = "Broadcasting...";
+
+    try {
+        let {data: receiverData} = await db.from("wallets").select("data").eq("id", toId).single();
+        if(!receiverData) {
+            btn.disabled = false;
+            btn.innerText = "Authorize Transfer";
+            return showToast("Account not found");
         }
 
-        async function fetchFromCloud() {
-            if (!walletId) return;
-            updateSyncStatus("Syncing", "bg-yellow-500 shadow-[0_0_8px_#eab308]");
-            try {
-                const { data, error } = await supabaseClient.from('wallets').select('vault_data').eq('id', walletId).single();
-                if (!error && data?.vault_data) {
-                    userData = data.vault_data;
-                    updateSyncStatus("Live", "bg-emerald-500 shadow-[0_0_8px_#10b981]");
-                } else if (error?.code === 'PGRST116') {
-                    await syncToCloud();
-                }
-            } catch (e) { console.error(e); }
-            renderUI();
-            populateSwap();
-        }
+        let receiver = receiverData.data;
+        user.balances[asset].amount -= amt;
+        user.history.push({ type: "Sent", asset, amount: amt, party: toId, time: Date.now() });
 
-        function populateSwap() {
-            const from = document.getElementById('swap-from');
-            const to = document.getElementById('swap-to');
-            const opts = Object.keys(userData.balances).map(k => `<option value="${k}">${k}</option>`).join('');
-            from.innerHTML = opts; to.innerHTML = opts; 
-            to.value = (from.value === 'ETH') ? 'BTC' : 'ETH';
-            calculateSwap();
-        }
+        receiver.balances[asset].amount += amt;
+        receiver.history.push({ type: "Received", asset, amount: amt, party: walletId, time: Date.now() });
 
-        function calculateSwap() {
-            const f = document.getElementById('swap-from').value;
-            const t = document.getElementById('swap-to').value;
-            const amount = parseFloat(document.getElementById('swap-from-amount').value) || 0;
-            const res = (amount * userData.balances[f].rate) / userData.balances[t].rate;
-            document.getElementById('swap-to-amount').value = res.toLocaleString(undefined, {maximumFractionDigits: 6});
-            document.getElementById('from-bal-hint').innerText = `Balance: ${userData.balances[f].amount.toFixed(4)} ${f}`;
-        }
+        await Promise.all([
+            db.from("wallets").update({data:user}).eq("id", walletId),
+            db.from("wallets").update({data:receiver}).eq("id", toId)
+        ]);
 
-        window.flipSwap = () => {
-            const from = document.getElementById('swap-from');
-            const to = document.getElementById('swap-to');
-            const temp = from.value;
-            from.value = to.value;
-            to.value = temp;
-            calculateSwap();
-        };
+        toggleModal('send-modal');
+        showToast(`Transaction Broadast: ${amt} ${asset}`);
+    } catch(err) {
+        showToast("Sync Error");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Authorize Transfer";
+        render();
+    }
+}
 
-        async function executeSwap() {
-            const f = document.getElementById('swap-from').value;
-            const t = document.getElementById('swap-to').value;
-            const amount = parseFloat(document.getElementById('swap-from-amount').value);
-            const toAmount = parseFloat(document.getElementById('swap-to-amount').value);
-            if (!amount || amount > userData.balances[f].amount) return showStatus("Insufficient Balance");
-            
-            showModal('progress-modal');
-            await new Promise(r => setTimeout(r, 2200));
-            
-            userData.balances[f].amount -= amount;
-            userData.balances[t].amount += toAmount;
-            userData.history.push({ type: 'Swap', asset: f, amount: amount, date: new Date() });
-            await syncToCloud();
-            
-            document.getElementById('loader-ring').classList.add('hidden');
-            document.getElementById('success-icon').classList.remove('hidden');
-            document.getElementById('progress-status').innerText = "Swap Complete";
-            document.getElementById('success-close').classList.remove('hidden');
-        }
+function switchTab(t){
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById(`${t}-view`).classList.remove('hidden');
+    document.querySelectorAll('.nav').forEach(n => n.classList.remove('tab-active'));
+    if (event) event.currentTarget.classList.add('tab-active');
+}
 
-        window.onload = () => {
-            if (!walletId) {
-                document.getElementById('onboarding-screen').classList.remove('hidden');
-            } else {
-                document.getElementById('main-wallet-interface').classList.remove('opacity-0');
-                fetchFromCloud();
-            }
-            setInterval(() => {
-                Object.keys(userData.balances).forEach(k => { if(k!=='USDC') userData.balances[k].rate += (Math.random()-0.5)*5; });
-                renderUI();
-            }, 8000);
-        };
-
-        function updateSyncStatus(text, colorClass) {
-            const s = document.getElementById('connection-status');
-            const d = document.getElementById('sync-dot');
-            if (s) s.innerText = text;
-            if (d) d.className = `w-1.5 h-1.5 rounded-full ${colorClass}`;
-        }
-
-        window.switchTab = (tab) => {
-            document.querySelectorAll('.view-container').forEach(v => v.classList.add('hidden'));
-            document.querySelectorAll('footer button').forEach(b => b.classList.remove('tab-active', 'text-blue-500'));
-            document.getElementById(`view-${tab}`).classList.remove('hidden');
-            document.getElementById(`tab-${tab}`).classList.add('tab-active', 'text-blue-500');
-        };
-
-        window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
-        window.hideModal = (id) => {
-            document.getElementById(id).classList.add('hidden');
-            if (id === 'progress-modal') {
-                document.getElementById('loader-ring').classList.remove('hidden');
-                document.getElementById('success-icon').classList.add('hidden');
-                document.getElementById('success-close').classList.add('hidden');
-                document.getElementById('progress-status').innerText = "Syncing Node...";
-            }
-        };
-
-        window.togglePrivacy = () => { userData.privacyMode = !userData.privacyMode; renderUI(); };
-        window.showStatus = (m) => { 
-            const d = document.createElement('div'); 
-            d.className="fixed bottom-32 left-1/2 -translate-x-1/2 glass px-6 py-4 rounded-3xl z-[3000] text-xs font-black border-blue-500/30 text-blue-400 shadow-2xl animate-view"; 
-            d.innerText=m; 
-            document.body.appendChild(d); 
-            setTimeout(()=>d.remove(), 2500); 
-        };
-        window.copySecretKey = () => { navigator.clipboard.writeText(walletId); showStatus("Nexus ID Copied"); };
-        
-        window.createNewAccount = async () => {
-            const newId = `nx_${Math.random().toString(36).substring(2, 12)}`;
-            walletId = newId;
-            localStorage.setItem('nexus_wallet_id', newId);
-            document.getElementById('onboarding-screen').classList.add('hidden');
-            document.getElementById('main-wallet-interface').classList.remove('opacity-0');
-            await syncToCloud();
-            renderUI();
-            populateSwap();
-        };
-
-        window.showImportUI = () => {
-            document.getElementById('onboarding-actions').classList.add('hidden');
-            document.getElementById('import-ui').classList.remove('hidden');
-        };
-
-        window.hideImportUI = () => {
-            document.getElementById('onboarding-actions').classList.remove('hidden');
-            document.getElementById('import-ui').classList.add('hidden');
-        };
-
-        window.submitImport = () => {
-            const input = document.getElementById('import-id-input').value.trim();
-            if (input.startsWith('nx_') && input.length > 5) {
-                walletId = input;
-                localStorage.setItem('nexus_wallet_id', input);
-                location.reload();
-            } else {
-                showStatus("Invalid Nexus ID");
-            }
-        };
-
-        window.logout = () => { localStorage.clear(); location.reload(); };
-
-        window.openAction = (type, key) => {
-            selectedAssetKey = key || 'BTC';
-            const a = userData.balances[selectedAssetKey];
-            document.getElementById('sel-name').innerText = a.name;
-            document.getElementById('sel-available').innerText = `${a.amount.toFixed(4)} ${selectedAssetKey} Available`;
-            document.getElementById('sel-icon').className = `w-12 h-12 rounded-2xl flex items-center justify-center bg-${a.color}/20 text-${a.color}`;
-            document.getElementById('sel-icon').innerHTML = `<i class="fab ${a.icon} text-xl"></i>`;
-            document.getElementById('transfer-amount').value = '';
-            document.getElementById('recipient-address').value = '';
-            showModal('transfer-modal');
-        };
-
-        window.initiateTransfer = async () => {
-            const amount = parseFloat(document.getElementById('transfer-amount').value);
-            const recipient = document.getElementById('recipient-address').value.trim();
-            
-            if (!recipient) return showStatus("Enter Recipient ID");
-            if (!amount || amount <= 0) return showStatus("Enter Amount");
-            if (amount > userData.balances[selectedAssetKey].amount) return showStatus("Insufficient Balance");
-            
-            hideModal('transfer-modal');
-            showModal('progress-modal');
-            await new Promise(r => setTimeout(r, 2500));
-            
-            userData.balances[selectedAssetKey].amount -= amount;
-            userData.history.push({ type: 'Send', asset: selectedAssetKey, amount: amount, date: new Date() });
-            await syncToCloud();
-            
-            document.getElementById('loader-ring').classList.add('hidden');
-            document.getElementById('success-icon').classList.remove('hidden');
-            document.getElementById('progress-status').innerText = "Sent Successfully";
-            document.getElementById('success-close').classList.remove('hidden');
-        };
-
-        window.updateSettings = async () => {
-            userData.walletName = document.getElementById('edit-vault-name').value;
-            hideModal('settings-modal');
-            await syncToCloud();
-            renderUI();
-        };
-    </script>
+function toggleModal(id){ document.getElementById(id).classList.toggle('hidden'); }
+function openSendModal(){ toggleModal('send-modal'); }
+function showToast(m){
+    const t = document.createElement('div');
+    t.className = "glass px-6 py-3 rounded-2xl text-xs font-black text-blue-400 border-blue-500/20";
+    t.innerText = m;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+function copyAddress(){
+    navigator.clipboard.writeText(walletId);
+    showToast("Account ID Copied");
+}
+function logout(){ localStorage.clear(); location.reload(); }
+function togglePrivacy(){ privacy = !privacy; render(); }
+function showApp(){ 
+    document.getElementById("onboard").classList.add("hidden"); 
+    document.getElementById("app").classList.remove("hidden"); 
+}
+function showImportBox(){ 
+    document.getElementById("import-box").classList.remove("hidden"); 
+    document.getElementById("onboarding-main").classList.add("hidden"); 
+}
+function hideImportBox(){ 
+    document.getElementById("import-box").classList.add("hidden"); 
+    document.getElementById("onboarding-main").classList.remove("hidden"); 
+}
+async function importWallet(){
+    let id = document.getElementById("import-id").value;
+    if(!id) return showToast("Enter ID");
+    walletId = id; localStorage.setItem("nexus_wallet", id);
+    await loadWallet(); showApp();
+    initRealtime();
+}
+</script>
 </body>
 </html>
