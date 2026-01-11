@@ -232,7 +232,6 @@
         };
 
         const initPeer = () => {
-            // Using PeerJS public server (Reliable fallback for P2P)
             peer = new Peer();
 
             peer.on('open', (id) => {
@@ -243,7 +242,6 @@
                 document.getElementById('status-tag').querySelector('div').className = "w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse";
             });
 
-            // Handling Incoming Connections (Receiving Money)
             peer.on('connection', (conn) => {
                 conn.on('data', (data) => {
                     if(data.type === 'PAYMENT') {
@@ -262,8 +260,16 @@
             });
 
             peer.on('error', (err) => {
-                console.error(err);
-                notify("Mesh Connection Issue", "err");
+                if (err.type === 'peer-unavailable') {
+                    notify("Recipient is offline or ID is wrong", "err");
+                    // Reset Send Button if it was in loading state
+                    const btn = document.getElementById('send-btn');
+                    btn.disabled = false;
+                    btn.innerText = "Send Instantly";
+                } else {
+                    console.error('Peer Error:', err.type, err);
+                    notify("Mesh Network Issue: " + err.type, "err");
+                }
             });
         };
 
@@ -298,7 +304,17 @@
 
             const conn = peer.connect(tid);
             
+            // Set a timeout to catch cases where PeerJS doesn't fire an error quickly
+            const connectTimeout = setTimeout(() => {
+                if (btn.disabled && btn.innerText === "Connecting...") {
+                    notify("Peer connection timed out", "err");
+                    btn.disabled = false;
+                    btn.innerText = "Send Instantly";
+                }
+            }, 8000);
+
             conn.on('open', () => {
+                clearTimeout(connectTimeout);
                 conn.send({
                     type: 'PAYMENT',
                     amount: amt,
@@ -320,14 +336,12 @@
                 btn.disabled = false;
                 btn.innerText = "Send Instantly";
             });
-
-            setTimeout(() => {
-                if(btn.disabled && btn.innerText === "Connecting...") {
-                    notify("Peer not found or offline", "err");
-                    btn.disabled = false;
-                    btn.innerText = "Send Instantly";
-                }
-            }, 5000);
+            
+            conn.on('error', (err) => {
+                clearTimeout(connectTimeout);
+                btn.disabled = false;
+                btn.innerText = "Send Instantly";
+            });
         };
 
         window.openModal = (type) => document.getElementById(`modal-${type}`).classList.remove('hidden');
