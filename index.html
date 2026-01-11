@@ -1,114 +1,459 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>School Announcements - Admin</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 30px; background: #f4f4f9; }
-    h1 { color: #333; }
-    .login, .admin-panel { max-width: 500px; margin: auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-    input, textarea, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #007bff; color: white; cursor: pointer; }
-    button:hover { background: #0056b3; }
-    .announcement { background: #e9ecef; padding: 10px; margin: 10px 0; border-radius: 5px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Vault - Crypto Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: white;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            transition: all 0.3s ease;
+        }
+
+        .btn-gradient:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 100px;
+        }
+        
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots { 
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+        }
+
+        .notification {
+            transform: translateY(-100%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .notification.show { transform: translateY(0); }
+    </style>
 </head>
 <body>
 
-<h1>Admin Panel - Announcements</h1>
+    <!-- Notification Toast -->
+    <div id="toast" class="notification fixed top-4 left-4 right-4 z-[200] glass p-4 rounded-2xl flex items-center gap-3 border-l-4 border-l-blue-500 shadow-2xl pointer-events-none">
+        <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="flex-1">
+            <p id="toast-msg" class="text-sm font-medium">Cloud sync active</p>
+        </div>
+    </div>
 
-<div class="login" id="loginBox">
-  <h3>Admin Login</h3>
-  <input type="text" id="username" placeholder="Username">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-</div>
+    <div class="w-full max-w-md h-full bg-[#0a0a0a] relative flex flex-col mx-auto shadow-2xl border-x border-white/5 overflow-hidden">
+        
+        <!-- INITIAL AUTH/SETUP SCREEN -->
+        <div id="auth-screen" class="absolute inset-0 z-[60] bg-[#0a0a0a] p-8 flex flex-col justify-center transition-all duration-500">
+            <div class="mb-12 text-center">
+                <div class="w-20 h-20 bg-blue-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i class="fas fa-shield-halved text-4xl text-white"></i>
+                </div>
+                <h1 class="text-3xl font-bold mb-2">Nexus Vault</h1>
+                <p class="text-gray-400">Secure Cloud-Synced Wallet</p>
+            </div>
 
-<div class="admin-panel" id="adminPanel" style="display:none;">
-  <h3>Post New Announcement</h3>
-  <input type="text" id="title" placeholder="Announcement Title">
-  <textarea id="content" placeholder="Announcement Content"></textarea>
-  <button onclick="postAnnouncement()">Post</button>
+            <div id="auth-actions" class="space-y-4">
+                <div id="setup-view">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block text-gray-400">Wallet Name</label>
+                    <input type="text" id="wallet-name-input" placeholder="e.g. My Ledger" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4">
+                    <button id="btn-create" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg">Create New Wallet</button>
+                    
+                    <div class="relative py-6">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div>
+                        <div class="relative flex justify-center text-xs uppercase"><span class="bg-[#0a0a0a] px-2 text-gray-500">Restore Existing</span></div>
+                    </div>
 
-  <h3>Existing Announcements</h3>
-  <div id="announcements"></div>
-</div>
+                    <input type="text" id="sync-code-input" placeholder="Enter 12-digit Sync ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500 transition-colors text-white mb-4 text-center font-mono uppercase tracking-widest">
+                    <button id="btn-sync" class="w-full bg-white/10 py-3 rounded-xl font-bold hover:bg-white/20">Sync Data</button>
+                </div>
+            </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+            <div id="auth-loading" class="hidden text-center">
+                <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-sm text-gray-400 loading-dots">Connecting to secure node</p>
+            </div>
+        </div>
 
-<script>
-  // ✅ Your Firebase Config
-  const firebaseConfig = {
-    apiKey: "AIzaSyATgzeG9ak124o3rL6CdwfpLcApFy81zuU",
-    authDomain: "school-eb97e.firebaseapp.com",
-    projectId: "school-eb97e",
-    storageBucket: "school-eb97e.firebasestorage.app",
-    messagingSenderId: "1009963382013",
-    appId: "1:1009963382013:web:49a6a3289f92cd6c5bfa94",
-    measurementId: "G-7MCFP02KGG"
-  };
+        <!-- MAIN APP -->
+        <div id="main-app" class="hidden flex-col h-full relative">
+            
+            <div class="p-6 flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-sm font-bold shadow-lg shadow-blue-500/20">NV</div>
+                    <div>
+                        <span id="display-wallet-name" class="font-bold text-sm block">Wallet</span>
+                        <span id="sync-code-display" class="text-[10px] text-blue-500 font-mono font-bold tracking-tight">ID: LOADING...</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-gray-400">
+                    <i class="fas fa-qrcode cursor-pointer hover:text-white transition-colors" onclick="showModal('receive-modal')"></i>
+                    <i class="fas fa-arrow-right-from-bracket cursor-pointer hover:text-white" onclick="handleLogout()"></i>
+                </div>
+            </div>
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+            <div class="scroll-container">
+                <div class="px-6 py-4">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-gray-400 text-sm font-medium">Net Worth</span>
+                        <i id="privacy-icon" class="far fa-eye text-xs text-gray-600 cursor-pointer" onclick="togglePrivacy()"></i>
+                    </div>
+                    <h2 id="total-balance" class="text-4xl font-bold tracking-tight">$824,192.40</h2>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="text-gray-500 text-xs font-medium">Cloud Synchronized</span>
+                    </div>
+                </div>
 
-  // ✅ Simple Login (hardcoded)
-  function login() {
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
-    if(user === "admin" && pass === "1234") {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("adminPanel").style.display = "block";
-      loadAnnouncements();
-    } else {
-      alert("Wrong username or password!");
-    }
-  }
+                <div class="grid grid-cols-4 gap-4 px-6 py-6">
+                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
+                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-arrow-up"></i></div>
+                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Send</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
+                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-arrow-down"></i></div>
+                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Recv</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
+                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-repeat"></i></div>
+                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Swap</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2" onclick="showModal('receive-modal')">
+                        <div class="w-12 h-12 rounded-full glass flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-bank"></i></div>
+                        <span class="text-[11px] font-semibold text-gray-400 uppercase">Buy</span>
+                    </div>
+                </div>
 
-  // ✅ Post Announcement
-  function postAnnouncement() {
-    const title = document.getElementById("title").value;
-    const content = document.getElementById("content").value;
+                <div class="px-6">
+                    <h3 class="font-bold text-lg mb-4 flex justify-between items-center">
+                        Assets
+                        <span class="text-xs font-normal text-gray-500">3 tokens</span>
+                    </h3>
+                    <div id="assets-list" class="space-y-3">
+                        <div class="coin-card glass p-4 rounded-2xl flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 bg-orange-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg shadow-orange-500/20"><i class="fab fa-bitcoin"></i></div>
+                                <div><div class="font-bold">Bitcoin</div><div class="text-xs text-gray-500">8.42 BTC</div></div>
+                            </div>
+                            <div class="text-right"><div class="font-bold balance-val">$548,210.30</div><div class="text-xs text-green-500">+2.4%</div></div>
+                        </div>
+                        <div class="coin-card glass p-4 rounded-2xl flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 bg-[#14F195] rounded-full flex items-center justify-center text-black text-xl shadow-lg shadow-green-500/20 font-bold">S</div>
+                                <div><div class="font-bold">Solana</div><div class="text-xs text-gray-500">1,240.50 SOL</div></div>
+                            </div>
+                            <div class="text-right"><div class="font-bold balance-val">$189,502.10</div><div class="text-xs text-green-500">+12.1%</div></div>
+                        </div>
+                        <div class="coin-card glass p-4 rounded-2xl flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-500/20"><i class="fab fa-ethereum"></i></div>
+                                <div><div class="font-bold">Ethereum</div><div class="text-xs text-gray-500">35.20 ETH</div></div>
+                            </div>
+                            <div class="text-right"><div class="font-bold balance-val">$86,480.00</div><div class="text-xs text-red-400">-0.8%</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    if(title && content) {
-      db.collection("announcements").add({
-        title: title,
-        content: content,
-        timestamp: Date.now()
-      });
-      document.getElementById("title").value = "";
-      document.getElementById("content").value = "";
-    } else {
-      alert("Please fill all fields.");
-    }
-  }
+            <!-- Bottom Nav -->
+            <div class="fixed-nav glass h-20 px-10 flex justify-between items-center border-t border-white/10 bg-[#0a0a0a]/90 z-50">
+                <div class="flex flex-col items-center gap-1 text-blue-500 cursor-pointer" onclick="hideAllModals()">
+                    <i class="fas fa-wallet text-xl"></i>
+                    <span class="text-[10px] font-bold">Wallet</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showModal('market-modal')">
+                    <i class="fas fa-chart-line text-xl"></i>
+                    <span class="text-[10px]">Market</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 text-gray-500 cursor-pointer" onclick="showModal('history-modal')">
+                    <i class="fas fa-clock-rotate-left text-xl"></i>
+                    <span class="text-[10px]">History</span>
+                </div>
+            </div>
+        </div>
 
-  // ✅ Load & Display Announcements
-  function loadAnnouncements() {
-    db.collection("announcements").orderBy("timestamp", "desc").onSnapshot(snapshot => {
-      const list = document.getElementById("announcements");
-      list.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.className = "announcement";
-        div.innerHTML = `
-          <h4>${data.title}</h4>
-          <p>${data.content}</p>
-          <button onclick="deleteAnnouncement('${doc.id}')">Delete</button>
-        `;
-        list.appendChild(div);
-      });
-    });
-  }
+        <!-- HISTORY MODAL -->
+        <div id="history-modal" class="hidden absolute inset-0 z-[100] bg-[#0a0a0a] flex flex-col">
+            <div class="p-6 flex items-center gap-4 border-b border-white/5">
+                <i class="fas fa-arrow-left text-gray-400" onclick="hideModal('history-modal')"></i>
+                <h3 class="text-xl font-bold">Activity</h3>
+            </div>
+            <div id="history-list" class="scroll-container p-6 space-y-6">
+                <!-- Data from DB -->
+            </div>
+        </div>
 
-  // ✅ Delete Announcement
-  function deleteAnnouncement(id) {
-    db.collection("announcements").doc(id).delete();
-  }
-</script>
+        <!-- MARKET MODAL -->
+        <div id="market-modal" class="hidden absolute inset-0 z-[100] bg-[#0a0a0a] flex flex-col">
+            <div class="p-6 flex items-center gap-4 border-b border-white/5">
+                <i class="fas fa-arrow-left text-gray-400" onclick="hideModal('market-modal')"></i>
+                <h3 class="text-xl font-bold">Market Cap</h3>
+            </div>
+            <div class="scroll-container p-6">
+                <div class="w-full h-48 bg-white/5 rounded-3xl mb-8 relative overflow-hidden p-6 flex flex-col justify-center">
+                    <div class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Total Crypto Market</div>
+                    <div id="market-cap" class="text-3xl font-bold">$3.12T</div>
+                    <div class="text-green-500 text-sm font-bold mt-1">+1.24% today</div>
+                </div>
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
+                        <span class="font-bold">Global Rank</span>
+                        <span class="text-blue-500">#1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- RECEIVE MODAL (SYNC DETAILS) -->
+        <div id="receive-modal" class="hidden absolute inset-0 z-[150] bg-black/95 flex items-center justify-center p-8">
+            <div class="w-full bg-[#111] p-8 rounded-3xl text-center border border-white/10 shadow-2xl">
+                <h3 class="font-bold text-xl mb-6">Cloud Sync Identity</h3>
+                <div class="bg-white p-3 rounded-2xl inline-block mb-6 shadow-lg shadow-white/5">
+                    <i class="fas fa-qrcode text-8xl text-black"></i>
+                </div>
+                <div class="text-left space-y-4 mb-8">
+                    <div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Public Address</p>
+                        <p id="wallet-id-copy" class="text-xs font-mono break-all text-gray-300 bg-white/5 p-3 rounded-xl border border-white/5">LOADING...</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Restore/Sync Code</p>
+                        <p id="sync-id-copy" class="text-sm font-mono font-bold text-blue-400 bg-blue-500/5 p-3 rounded-xl border border-blue-500/10">LOADING...</p>
+                    </div>
+                </div>
+                <button onclick="copyToClipboard('sync-id-copy')" class="w-full btn-gradient py-4 rounded-xl font-bold text-sm mb-3">Copy Sync Code</button>
+                <button onclick="hideModal('receive-modal')" class="w-full text-gray-500 font-medium py-2">Close</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        // Firebase Setup
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'crypto-vault-v1';
+
+        let user = null;
+        let isPrivacyMode = false;
+
+        // Toast Helper
+        const showToast = (msg) => {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        };
+
+        // UI Global Functions
+        window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
+        window.hideModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.hideAllModals = () => ['market-modal', 'history-modal', 'receive-modal'].forEach(hideModal);
+        
+        window.togglePrivacy = () => {
+            isPrivacyMode = !isPrivacyMode;
+            const balanceEl = document.getElementById('total-balance');
+            const subVals = document.querySelectorAll('.balance-val');
+            const icon = document.getElementById('privacy-icon');
+            
+            if (isPrivacyMode) {
+                balanceEl.innerText = '••••••••';
+                subVals.forEach(el => el.innerText = '••••');
+                icon.classList.replace('far', 'fas');
+            } else {
+                balanceEl.innerText = '$824,192.40';
+                subVals.forEach((el, i) => {
+                    const vals = ['$548,210.30', '$189,502.10', '$86,480.00'];
+                    el.innerText = vals[i];
+                });
+                icon.classList.replace('fas', 'far');
+            }
+        };
+
+        window.copyToClipboard = (id) => {
+            const text = document.getElementById(id).innerText;
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("Copied to clipboard!");
+        };
+
+        window.handleLogout = () => {
+            if(confirm("Logging out will clear session. Make sure you have your Sync ID saved!")) {
+                location.reload();
+            }
+        };
+
+        // Backend Integration Pattern
+        const startAppFlow = async (u) => {
+            user = u;
+            const storedWalletId = localStorage.getItem('nexus_wallet_id');
+            if (storedWalletId) {
+                initWallet(null, storedWalletId);
+            }
+        };
+
+        const initWallet = async (name, existingUid = null) => {
+            if (!user) return;
+            
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('auth-loading').classList.remove('hidden');
+
+            const targetUid = existingUid || user.uid;
+            // RULE 1: Strict Paths
+            const walletRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallets', targetUid);
+
+            try {
+                const snap = await getDoc(walletRef);
+                if (!snap.exists()) {
+                    if (existingUid) {
+                        showToast("Wallet ID not found.");
+                        document.getElementById('setup-view').classList.remove('hidden');
+                        document.getElementById('auth-loading').classList.add('hidden');
+                        return;
+                    }
+
+                    // Create New Realistic State
+                    await setDoc(walletRef, {
+                        name: name || 'Main Vault',
+                        balance: 824192.40,
+                        created: Date.now(),
+                        history: [
+                            { type: 'in', label: 'RDM Pay Incoming', amount: '24,500.00', date: 'Jan 10, 2026' },
+                            { type: 'in', label: 'Mining Payout', amount: '12,000.00', date: 'Dec 28, 2025' },
+                            { type: 'swap', label: 'BTC to SOL Swap', amount: 'Completed', date: 'Dec 15, 2025' }
+                        ]
+                    });
+                }
+
+                localStorage.setItem('nexus_wallet_id', targetUid);
+                listenToWallet(targetUid);
+            } catch (e) {
+                console.error(e);
+                showToast("Connection error. Retrying...");
+            }
+        };
+
+        const listenToWallet = (uid) => {
+            const walletRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallets', uid);
+            
+            onSnapshot(walletRef, (snapshot) => {
+                const data = snapshot.data();
+                if (!data) return;
+
+                // Update UI
+                document.getElementById('display-wallet-name').innerText = data.name;
+                const shortId = uid.substring(0, 12).toUpperCase();
+                document.getElementById('sync-code-display').innerText = `Sync ID: ${shortId}`;
+                document.getElementById('sync-id-copy').innerText = uid;
+                document.getElementById('wallet-id-copy').innerText = `bc1q${uid.toLowerCase().substring(0,24)}`;
+                
+                renderHistory(data.history || []);
+
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.replace('hidden', 'flex');
+                showToast("Cloud Data Synced");
+            }, (err) => {
+                showToast("Sync interrupted.");
+            });
+        };
+
+        const renderHistory = (history) => {
+            const container = document.getElementById('history-list');
+            container.innerHTML = `<p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Confirmed Transactions</p>`;
+            
+            history.forEach(tx => {
+                const isPlus = tx.type === 'in';
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full ${isPlus ? 'bg-green-500/10 text-green-500' : 'bg-white/10 text-gray-400'} flex items-center justify-center">
+                                <i class="fas ${isPlus ? 'fa-arrow-down-left' : 'fa-repeat'}"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">${tx.label}</div>
+                                <div class="text-[10px] text-gray-500">${tx.date}</div>
+                            </div>
+                        </div>
+                        <div class="text-right font-bold ${isPlus ? 'text-green-500' : 'text-gray-400'}">
+                            ${isPlus ? '+$' : ''}${tx.amount}
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        // RULE 3: Auth Before Queries
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+
+        onAuthStateChanged(auth, (u) => {
+            if (u) startAppFlow(u);
+        });
+
+        initAuth();
+
+        // Setup Event Listeners
+        document.getElementById('btn-create').onclick = () => {
+            const val = document.getElementById('wallet-name-input').value;
+            initWallet(val);
+        };
+
+        document.getElementById('btn-sync').onclick = () => {
+            const code = document.getElementById('sync-code-input').value;
+            if (code) initWallet(null, code.trim().toLowerCase());
+        };
+
+    </script>
 </body>
 </html>
