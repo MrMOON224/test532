@@ -3,165 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phantom Mobile Fullstack</title>
+    <title>Phantom Mobile Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .mobile-viewport { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; background: #111; position: relative; display: flex; flex-direction: column; overflow: hidden; }
-        @media (min-width: 640px) { .mobile-viewport { border: 1px solid #333; border-radius: 40px; } }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --phantom-purple: #ab9ff2;
+            --phantom-dark: #0f0f0f;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #000; 
+            color: white; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        .mobile-viewport { 
+            width: 100%; 
+            max-width: 410px; 
+            height: 100vh; 
+            max-height: 860px; 
+            background: var(--phantom-dark); 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+
+        @media (min-width: 640px) { 
+            .mobile-viewport { 
+                border: 8px solid #1a1a1a; 
+                border-radius: 48px; 
+                box-shadow: 0 0 100px rgba(171, 159, 242, 0.1);
+            } 
+        }
+
         .phantom-gradient { background: linear-gradient(135deg, #ab9ff2 0%, #4e44ce 100%); }
-        .tab-active { color: #ab9ff2; }
-        input:focus { outline: none; border-color: #ab9ff2; }
-        .loader { border: 2px solid #333; border-top: 2px solid #ab9ff2; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        .glass { background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+        .tab-active { color: var(--phantom-purple); position: relative; }
+        .tab-active::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: var(--phantom-purple); border-radius: 50%; }
+        
+        .asset-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .asset-card:hover { background: rgba(255,255,255,0.06); }
+        .asset-card:active { transform: scale(0.97); }
+
+        .loader { border: 2px solid #333; border-top: 2px solid var(--phantom-purple); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
 <body>
 
     <div class="mobile-viewport" id="app">
         <!-- Loading Overlay -->
-        <div id="loading-overlay" class="absolute inset-0 z-50 bg-black flex items-center justify-center hidden">
-            <div class="loader"></div>
+        <div id="loading-overlay" class="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center hidden">
+            <div class="flex flex-col items-center gap-4">
+                <div class="loader"></div>
+                <p class="text-[10px] font-bold tracking-widest text-white/40 uppercase">Syncing Wallet</p>
+            </div>
         </div>
 
         <!-- Auth Screen -->
-        <div id="auth-screen" class="h-full w-full flex flex-col items-center justify-center p-8 animate__animated animate__fadeIn">
-            <div class="w-16 h-16 phantom-gradient rounded-2xl flex items-center justify-center shadow-lg mb-8">
-                <svg width="32" height="32" viewBox="0 0 128 128" fill="white"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0zm0 112c-26.5 0-48-21.5-48-48S37.5 16 64 16s48 21.5 48 48-21.5 48-48 48z"/></svg>
+        <div id="auth-screen" class="h-full w-full flex flex-col items-center justify-center p-10 animate__animated animate__fadeIn">
+            <div class="w-20 h-20 phantom-gradient rounded-[28px] flex items-center justify-center shadow-2xl mb-10 rotate-3 transition-transform hover:rotate-0">
+                <svg width="40" height="40" viewBox="0 0 128 128" fill="white"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0zm0 112c-26.5 0-48-21.5-48-48S37.5 16 64 16s48 21.5 48 48-21.5 48-48 48z"/></svg>
             </div>
-            <h1 class="text-3xl font-bold mb-2">Phantom</h1>
-            <p id="auth-subtitle" class="text-gray-400 text-center text-sm mb-8 px-4">Securely access your digital assets.</p>
+            <h1 class="text-3xl font-bold mb-3">Phantom</h1>
+            <p class="text-white/40 text-center text-sm mb-12 max-w-[240px]">The friendliest crypto wallet on Solana and beyond.</p>
 
             <div class="w-full space-y-4">
-                <!-- Login Form -->
                 <div id="login-form">
-                    <input type="text" id="login-username" placeholder="Username" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-3 text-white">
-                    <input type="password" id="login-password" placeholder="Password" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-4 text-white">
-                    <button onclick="signIn()" class="w-full bg-[#ab9ff2] text-black font-bold py-4 rounded-xl hover:bg-[#c1b8f5] transition-colors">Unlock Wallet</button>
-                    <button onclick="toggleAuth('signup')" class="w-full text-purple-400 font-semibold mt-4 text-sm">Create new account</button>
-                    
-                    <div class="mt-8 pt-6 border-t border-white/5">
-                        <button onclick="showSQL()" class="w-full text-gray-600 text-[10px] uppercase font-bold tracking-widest hover:text-gray-400 transition-colors">Get Database SQL Setup</button>
+                    <div class="glass rounded-2xl p-1 mb-4">
+                        <input type="text" id="login-username" placeholder="Username" class="w-full bg-transparent p-4 text-white placeholder:text-white/20">
+                    </div>
+                    <div class="glass rounded-2xl p-1 mb-6">
+                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-transparent p-4 text-white placeholder:text-white/20">
+                    </div>
+                    <button onclick="signIn()" class="w-full bg-white text-black font-bold py-4 rounded-2xl hover:opacity-90 transition-opacity">Unlock</button>
+                    <button onclick="toggleAuth('signup')" class="w-full text-white/40 font-semibold mt-6 text-xs uppercase tracking-widest">Create Wallet</button>
+                    <div class="mt-12 text-center">
+                        <button onclick="showSQL()" class="text-[9px] text-white/10 hover:text-white/30 transition-colors uppercase font-bold tracking-[0.2em]">Database Setup</button>
                     </div>
                 </div>
 
-                <!-- Signup Form -->
                 <div id="signup-form" class="hidden">
-                    <input type="text" id="signup-username" placeholder="Choose Username" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-3 text-white">
-                    <input type="password" id="signup-password" placeholder="Set Password" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-4 text-white">
-                    <button onclick="signUp()" class="w-full bg-[#ab9ff2] text-black font-bold py-4 rounded-xl">Register Wallet</button>
-                    <button onclick="toggleAuth('login')" class="w-full text-purple-400 font-semibold mt-4 text-sm">Back to login</button>
+                    <input type="text" id="signup-username" placeholder="Choose Username" class="w-full glass rounded-2xl p-4 mb-3">
+                    <input type="password" id="signup-password" placeholder="Set Password" class="w-full glass rounded-2xl p-4 mb-6">
+                    <button onclick="signUp()" class="w-full phantom-gradient text-white font-bold py-4 rounded-2xl">Create New Wallet</button>
+                    <button onclick="toggleAuth('login')" class="w-full text-white/40 font-semibold mt-6 text-xs">Back to Login</button>
                 </div>
             </div>
-        </div>
-
-        <!-- SQL Modal -->
-        <div id="sql-modal" class="absolute inset-0 z-[60] bg-black/95 p-6 flex flex-col hidden animate__animated animate__fadeIn">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-purple-400 text-sm">Supabase Setup Guide</h3>
-                <button onclick="document.getElementById('sql-modal').classList.add('hidden')" class="text-gray-500 text-xl">✕</button>
-            </div>
-            <p class="text-[11px] text-gray-300 mb-4 bg-purple-900/20 p-3 rounded-lg border border-purple-500/30">
-                <b>FINAL FIX FOR 23502:</b> Run this script to completely remove the 'phrase' requirement and refresh the server cache.
-            </p>
-            <div class="flex-1 overflow-auto bg-[#0a0a0a] rounded-xl p-4 border border-white/10">
-                <pre id="sql-content" class="text-[9px] font-mono text-gray-400 leading-relaxed"></pre>
-            </div>
-            <button onclick="copySQL()" class="w-full bg-white text-black font-bold py-3 rounded-xl mt-4 text-xs">Copy SQL Code</button>
         </div>
 
         <!-- Main Screen -->
         <div id="main-screen" class="hidden h-full flex flex-col animate__animated animate__fadeIn">
-            <header class="p-4 flex items-center justify-between border-b border-white/5 bg-[#111]">
+            <header class="px-6 py-5 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 phantom-gradient rounded-lg flex items-center justify-center font-bold text-xs shadow-inner">P</div>
+                    <div class="w-9 h-9 phantom-gradient rounded-xl flex items-center justify-center font-bold text-xs shadow-lg">P</div>
                     <div>
-                        <p id="user-display" class="text-xs font-bold leading-none mb-1"></p>
-                        <p class="text-[10px] text-green-400 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Mainnet Beta
-                        </p>
+                        <div class="flex items-center gap-1.5">
+                            <p id="user-display" class="text-sm font-bold"></p>
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                        </div>
+                        <p class="text-[10px] text-white/30 font-bold uppercase tracking-tighter" id="wallet-address-head"></p>
                     </div>
                 </div>
-                <button onclick="signOut()" class="text-gray-500 hover:text-red-400 transition-colors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+                <button onclick="signOut()" class="w-9 h-9 glass rounded-xl flex items-center justify-center text-white/40 hover:text-white transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar" id="view-container">
+            <div class="flex-1 overflow-y-auto px-6 py-2 custom-scrollbar" id="view-container">
                 <!-- Dashboard -->
                 <div id="view-dashboard">
                     <div class="text-center py-10">
-                        <p id="balance-usd" class="text-4xl font-bold mb-1 tracking-tight">$0.00</p>
-                        <p class="text-gray-500 text-sm font-medium">Portfolio Balance</p>
+                        <p id="balance-usd" class="text-[44px] font-bold mb-1 tracking-tight">$0.00</p>
+                        <div class="flex items-center justify-center gap-2">
+                             <span class="text-xs font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">+4.2%</span>
+                             <p class="text-white/30 text-[11px] font-bold uppercase tracking-widest">Total Value</p>
+                        </div>
                     </div>
 
-                    <div class="flex gap-4 mb-8">
-                        <button onclick="switchView('send')" class="flex-1 flex flex-col items-center gap-2 group">
-                            <div class="w-12 h-12 bg-[#ab9ff2] text-black rounded-full flex items-center justify-center font-bold group-active:scale-95 transition-transform">↑</div>
-                            <span class="text-[10px] font-bold text-gray-500">Send</span>
+                    <div class="flex gap-4 mb-10">
+                        <button onclick="switchView('send')" class="flex-1 flex flex-col items-center gap-2.5">
+                            <div class="w-full h-14 glass rounded-2xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Send</span>
                         </button>
-                        <button class="flex-1 flex flex-col items-center gap-2 group">
-                            <div class="w-12 h-12 bg-[#222] text-[#ab9ff2] rounded-full flex items-center justify-center font-bold group-active:scale-95 transition-transform">↓</div>
-                            <span class="text-[10px] font-bold text-gray-500">Receive</span>
+                        <button onclick="switchView('receive')" class="flex-1 flex flex-col items-center gap-2.5">
+                            <div class="w-full h-14 glass rounded-2xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Receive</span>
                         </button>
-                        <button class="flex-1 flex flex-col items-center gap-2 group opacity-50">
-                            <div class="w-12 h-12 bg-[#222] text-gray-400 rounded-full flex items-center justify-center font-bold">⇄</div>
-                            <span class="text-[10px] font-bold text-gray-500">Swap</span>
+                        <button onclick="showToast('Feature restricted')" class="flex-1 flex flex-col items-center gap-2.5">
+                            <div class="w-full h-14 glass rounded-2xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 16 4 4 4-4m-4 4V9a4 4 0 0 1 4-4h5m4 3-4-4-4 4m4-4v11a4 4 0 0 1-4 4H7"/></svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Swap</span>
                         </button>
                     </div>
 
-                    <div class="bg-[#1a1a1a] rounded-2xl p-4 flex items-center justify-between border border-white/5">
-                        <div class="flex items-center gap-3">
-                            <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" class="w-10 h-10 rounded-full shadow-lg">
-                            <div>
-                                <p class="font-bold text-sm">Solana</p>
-                                <p class="text-[10px] text-gray-500 font-bold">SOL</p>
+                    <div class="space-y-3">
+                        <p class="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em] mb-4">Your Assets</p>
+                        
+                        <!-- Solana Card -->
+                        <div onclick="switchView('asset-sol')" class="asset-card glass rounded-[24px] p-5 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-11 h-11 bg-black rounded-full flex items-center justify-center shadow-lg border border-white/5">
+                                    <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" class="w-7 h-7">
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm">Solana</p>
+                                    <p class="text-[11px] text-white/30 font-bold">$145.50</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p id="balance-sol" class="font-bold text-sm">0.00 SOL</p>
+                                <p id="balance-usd-sol" class="text-[11px] text-white/30 font-medium">$0.00</p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p id="balance-sol" class="font-bold text-sm">0.00 SOL</p>
-                            <p id="balance-usd-sub" class="text-[10px] text-gray-500 font-medium">$0.00</p>
+
+                        <!-- Bitcoin Card -->
+                        <div onclick="switchView('asset-btc')" class="asset-card glass rounded-[24px] p-5 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-11 h-11 bg-[#F7931A] rounded-full flex items-center justify-center shadow-lg">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.556.362 9.103 1.962 2.67 8.474-1.24 14.91.36c6.43 1.602 10.34 8.112 8.728 14.544zm-6.722-4.046c.264-1.763-1.077-2.712-2.91-3.344l.594-2.384-1.452-.362-.578 2.318c-.382-.095-.773-.185-1.164-.273l.583-2.336-1.45-.36-.595 2.385c-.316-.072-.628-.144-.932-.22l.002-.01-2 .5-.386 1.55s1.076.247 1.053.262c.588.147.694.537.676.847l-.678 2.716c.04.01.094.026.152.05l-.153-.038-.95 3.807c-.072.178-.255.445-.668.342.015.022-1.053-.262-1.053-.262l-.72 1.657 1.887.47c.35.088.694.178 1.033.262l-.6 2.41 1.45.362.595-2.384c.396.107.78.21 1.156.305l-.59 2.365 1.452.362.6-2.405c2.476.468 4.34.28 5.122-1.957.63-1.803.024-2.844-1.275-3.522 1.04-.24 1.812-.924 2.022-2.336zm-3.607 5.106c-.448 1.8-3.483.827-4.466.582l.797-3.196c.983.245 4.12.73 3.67 2.614zm.448-5.137c-.41 1.64-2.942.806-3.757.6l.72-2.89c.816.204 3.45.586 3.037 2.29z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm">Bitcoin</p>
+                                    <p class="text-[11px] text-white/30 font-bold">$96,420</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p id="balance-btc" class="font-bold text-sm">0.00 BTC</p>
+                                <p id="balance-usd-btc" class="text-[11px] text-white/30 font-medium">$0.00</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Send -->
+                <!-- Send View -->
                 <div id="view-send" class="hidden animate__animated animate__fadeIn">
-                    <h2 class="text-xl font-bold mb-6">Send SOL</h2>
-                    <div class="space-y-4">
+                    <div class="flex items-center justify-between mb-8">
+                        <button onclick="switchView('dashboard')" class="w-10 h-10 glass rounded-full flex items-center justify-center">←</button>
+                        <h2 class="text-lg font-bold">Send Assets</h2>
+                        <div class="w-10"></div>
+                    </div>
+                    
+                    <div class="space-y-6">
                         <div>
-                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 mb-2 block">Recipient Username</label>
-                            <input type="text" id="send-to" placeholder="e.g. MasterBanker" class="w-full bg-[#222] p-4 rounded-xl border border-transparent">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 mb-2 block">Amount</label>
-                            <div class="relative">
-                                <input type="number" id="send-amount" placeholder="0.00" class="w-full bg-[#222] p-4 rounded-xl border border-transparent pr-12">
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-400">SOL</span>
+                            <p class="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-3 ml-1">To Username</p>
+                            <div class="glass rounded-2xl p-1">
+                                <input type="text" id="send-to" placeholder="Enter recipient username" class="w-full bg-transparent p-4 text-white placeholder:text-white/10">
                             </div>
                         </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-3 ml-1">Amount</p>
+                            <div class="glass rounded-2xl p-1 relative">
+                                <input type="number" id="send-amount" placeholder="0.00" class="w-full bg-transparent p-4 text-white text-2xl font-bold">
+                                <span class="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-phantom-purple">SOL</span>
+                            </div>
+                            <p class="text-[10px] text-white/20 mt-3 text-right font-bold" id="send-max-label"></p>
+                        </div>
                     </div>
-                    <button onclick="transferFunds()" id="transfer-btn" class="w-full bg-[#ab9ff2] text-black font-bold py-4 rounded-xl mt-8 shadow-lg">Send Now</button>
-                    <button onclick="switchView('dashboard')" class="w-full text-gray-500 mt-4 text-sm font-semibold">Cancel</button>
+                    
+                    <button onclick="transferFunds()" class="w-full phantom-gradient text-white font-bold py-5 rounded-[24px] mt-12 shadow-xl shadow-indigo-500/20">Send SOL</button>
                 </div>
 
-                <!-- History -->
-                <div id="view-history" class="hidden animate__animated animate__fadeIn">
-                    <h2 class="text-xl font-bold mb-6">Activity</h2>
-                    <div id="history-list" class="space-y-3"></div>
+                <!-- Receive View -->
+                <div id="view-receive" class="hidden animate__animated animate__fadeIn text-center">
+                    <div class="flex items-center justify-between mb-10">
+                        <button onclick="switchView('dashboard')" class="w-10 h-10 glass rounded-full flex items-center justify-center">←</button>
+                        <h2 class="text-lg font-bold">Receive</h2>
+                        <div class="w-10"></div>
+                    </div>
+
+                    <div class="glass rounded-[40px] p-8 inline-block mb-10 relative">
+                        <div class="bg-white p-4 rounded-3xl">
+                             <div class="grid grid-cols-8 gap-1 w-48 h-48" id="qr-pattern"></div>
+                        </div>
+                        <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-12 phantom-gradient rounded-2xl flex items-center justify-center shadow-xl border-4 border-black">
+                            <svg width="20" height="20" viewBox="0 0 128 128" fill="white"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0zm0 112c-26.5 0-48-21.5-48-48S37.5 16 64 16s48 21.5 48 48-21.5 48-48 48z"/></svg>
+                        </div>
+                    </div>
+
+                    <p class="text-[10px] text-white/20 font-bold uppercase tracking-[0.2em] mb-4">Your Wallet Address</p>
+                    <div class="glass rounded-2xl p-5 mb-8">
+                        <p class="font-mono text-xs text-phantom-purple break-all leading-relaxed" id="receive-address"></p>
+                    </div>
+                    
+                    <button onclick="copyAddress()" class="w-full glass py-5 rounded-[24px] font-bold hover:bg-white/10 transition-colors">Copy Address</button>
                 </div>
+
+                <!-- History View -->
+                <div id="view-history" class="hidden animate__animated animate__fadeIn">
+                    <h2 class="text-2xl font-bold mb-8 mt-4">Activity</h2>
+                    <div id="history-list" class="space-y-4"></div>
+                </div>
+
+                <!-- Simple Asset Views -->
+                <div id="view-asset-sol" class="hidden animate__animated animate__fadeIn">
+                    <button onclick="switchView('dashboard')" class="mb-6 text-white/40">← Back</button>
+                    <div class="text-center py-10">
+                        <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" class="w-16 h-16 mx-auto mb-6">
+                        <h2 class="text-2xl font-bold mb-1">Solana</h2>
+                        <p class="text-white/40 font-bold tracking-widest text-[10px] uppercase">SOL Asset Portfolio</p>
+                        <p class="text-4xl font-bold mt-10 mb-2" id="detail-sol-amt">0.00 SOL</p>
+                        <p class="text-white/40 font-medium" id="detail-sol-usd">$0.00</p>
+                    </div>
+                </div>
+
+                <div id="view-asset-btc" class="hidden animate__animated animate__fadeIn">
+                    <button onclick="switchView('dashboard')" class="mb-6 text-white/40">← Back</button>
+                    <div class="text-center py-10">
+                         <div class="w-16 h-16 bg-[#F7931A] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+                             <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.556.362 9.103 1.962 2.67 8.474-1.24 14.91.36c6.43 1.602 10.34 8.112 8.728 14.544zm-6.722-4.046c.264-1.763-1.077-2.712-2.91-3.344l.594-2.384-1.452-.362-.578 2.318c-.382-.095-.773-.185-1.164-.273l.583-2.336-1.45-.36-.595 2.385c-.316-.072-.628-.144-.932-.22l.002-.01-2 .5-.386 1.55s1.076.247 1.053.262c.588.147.694.537.676.847l-.678 2.716c.04.01.094.026.152.05l-.153-.038-.95 3.807c-.072.178-.255.445-.668.342.015.022-1.053-.262-1.053-.262l-.72 1.657 1.887.47c.35.088.694.178 1.033.262l-.6 2.41 1.45.362.595-2.384c.396.107.78.21 1.156.305l-.59 2.365 1.452.362.6-2.405c2.476.468 4.34.28 5.122-1.957.63-1.803.024-2.844-1.275-3.522 1.04-.24 1.812-.924 2.022-2.336zm-3.607 5.106c-.448 1.8-3.483.827-4.466.582l.797-3.196c.983.245 4.12.73 3.67 2.614zm.448-5.137c-.41 1.64-2.942.806-3.757.6l.72-2.89c.816.204 3.45.586 3.037 2.29z"/></svg>
+                         </div>
+                        <h2 class="text-2xl font-bold mb-1">Bitcoin</h2>
+                        <p class="text-white/40 font-bold tracking-widest text-[10px] uppercase">BTC Asset Portfolio</p>
+                        <p class="text-4xl font-bold mt-10 mb-2" id="detail-btc-amt">0.00 BTC</p>
+                        <p class="text-white/40 font-medium" id="detail-btc-usd">$0.00</p>
+                    </div>
+                </div>
+
             </div>
 
-            <nav class="h-20 bg-black border-t border-white/5 flex items-center justify-around">
-                <button onclick="switchView('dashboard')" class="nav-btn p-3 tab-active" id="btn-dash"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
-                <button onclick="switchView('history')" class="nav-btn p-3 text-gray-600" id="btn-hist"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>
+            <nav class="h-24 bg-black/60 backdrop-blur-xl border-t border-white/5 flex items-center justify-around pb-6">
+                <button onclick="switchView('dashboard')" class="p-4 transition-all hover:scale-110 active:scale-90" id="btn-dash">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                </button>
+                <button onclick="switchView('history')" class="p-4 transition-all hover:scale-110 active:scale-90" id="btn-hist">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
             </nav>
         </div>
 
-        <div id="toast" class="fixed bottom-24 left-6 right-6 p-4 bg-white text-black rounded-xl font-bold text-center text-sm transform translate-y-40 transition-transform duration-300 z-[100] shadow-2xl"></div>
+        <!-- Toast -->
+        <div id="toast" class="fixed bottom-32 left-8 right-8 p-5 glass text-white rounded-[24px] font-bold text-center text-xs tracking-wide transform translate-y-64 transition-transform duration-500 z-[200] shadow-2xl"></div>
     </div>
 
     <script>
@@ -169,40 +301,191 @@
             url: "https://ehhgrwcgckcqbjoxitsx.supabase.co",
             key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGdyd2NnY2tjcWJqb3hpdHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjg3ODksImV4cCI6MjA4MzcwNDc4OX0.fJIZ0-Fu3wFIZmI3pFwJ83IH_sWRMWc1K6B3GQvLU1k"
         };
-
         const sb = supabase.createClient(supabaseConfig.url, supabaseConfig.key);
         const MASTER_USER = "MasterBanker";
         const SOL_PRICE = 145.50;
+        const BTC_PRICE = 96420.00;
         let user = null;
 
-        function toggleAuth(mode) {
-            ['login-form', 'signup-form'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById(`${mode}-form`).classList.remove('hidden');
+        function generateWalletAddress(seed) {
+            const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+            let addr = "PH"; // Phantom Prefix
+            for (let i = 0; i < 42; i++) {
+                const charIndex = (seed.charCodeAt(i % seed.length) + i) % chars.length;
+                addr += chars[charIndex];
+            }
+            return addr;
         }
 
         function switchView(view) {
-            ['view-dashboard', 'view-send', 'view-history'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            const views = ['view-dashboard', 'view-send', 'view-history', 'view-receive', 'view-asset-sol', 'view-asset-btc'];
+            views.forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(`view-${view}`).classList.remove('hidden');
-            document.getElementById('btn-dash').className = `nav-btn p-3 ${view === 'dashboard' ? 'tab-active' : 'text-gray-600'}`;
-            document.getElementById('btn-hist').className = `nav-btn p-3 ${view === 'history' ? 'tab-active' : 'text-gray-600'}`;
+            
+            document.getElementById('btn-dash').className = `p-4 transition-all ${['dashboard','send','receive','asset-sol','asset-btc'].includes(view) ? 'tab-active' : 'text-white/20'}`;
+            document.getElementById('btn-hist').className = `p-4 transition-all ${view === 'history' ? 'tab-active' : 'text-white/20'}`;
+            
             if(view === 'history') loadHistory();
+            if(view === 'receive') {
+                const addr = generateWalletAddress(user.username);
+                document.getElementById('receive-address').innerText = addr;
+                generateQR();
+            }
+        }
+
+        function generateQR() {
+            const grid = document.getElementById('qr-pattern');
+            grid.innerHTML = '';
+            for(let i=0; i<64; i++) {
+                const bit = Math.random() > 0.6 ? 'bg-black' : 'bg-transparent';
+                const cell = document.createElement('div');
+                cell.className = `${bit} w-full h-full`;
+                grid.appendChild(cell);
+            }
         }
 
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg;
-            t.classList.remove('translate-y-40');
-            setTimeout(() => t.classList.add('translate-y-40'), 3000);
+            t.classList.remove('translate-y-64');
+            setTimeout(() => t.classList.add('translate-y-64'), 3000);
         }
 
         function toggleLoading(show) {
             document.getElementById('loading-overlay').classList.toggle('hidden', !show);
         }
 
+        async function signUp() {
+            const username = document.getElementById('signup-username').value.trim();
+            const password = document.getElementById('signup-password').value.trim();
+            if (!username || !password) return showToast("Enter credentials");
+            toggleLoading(true);
+            try {
+                const initialBalance = (username === MASTER_USER) ? 5000 : 0;
+                const { error } = await sb.from('profiles').insert([{ username, password, balance: initialBalance }]);
+                if (error) throw error;
+                showToast("Wallet created successfully!");
+                toggleAuth('login');
+            } catch (err) {
+                showToast(err.message.includes('unique') ? "Username already used" : "Setup Error");
+            } finally { toggleLoading(true); toggleLoading(false); }
+        }
+
+        async function signIn() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            toggleLoading(true);
+            try {
+                const { data, error } = await sb.from('profiles').select('*').eq('username', username).eq('password', password).single();
+                if (error || !data) return showToast("Access Denied");
+                user = data;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                document.getElementById('user-display').innerText = user.username;
+                const addr = generateWalletAddress(user.username);
+                document.getElementById('wallet-address-head').innerText = addr.substring(0, 6) + '...' + addr.substring(addr.length - 4);
+                updateUI();
+            } catch (err) { showToast("Authentication failed"); }
+            finally { toggleLoading(false); }
+        }
+
+        function updateUI() {
+            const sol = user.balance || 0;
+            const btc = (user.username === MASTER_USER) ? 1.5 : 0; // Static mock for BTC for now
+            
+            const solUsd = sol * SOL_PRICE;
+            const btcUsd = btc * BTC_PRICE;
+            const total = solUsd + btcUsd;
+
+            document.getElementById('balance-usd').innerText = `$${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            // SOL
+            document.getElementById('balance-sol').innerText = `${sol.toFixed(2)} SOL`;
+            document.getElementById('balance-usd-sol').innerText = `$${solUsd.toLocaleString()}`;
+            document.getElementById('detail-sol-amt').innerText = `${sol.toFixed(4)} SOL`;
+            document.getElementById('detail-sol-usd').innerText = `$${solUsd.toLocaleString()}`;
+
+            // BTC
+            document.getElementById('balance-btc').innerText = `${btc.toFixed(4)} BTC`;
+            document.getElementById('balance-usd-btc').innerText = `$${btcUsd.toLocaleString()}`;
+            document.getElementById('detail-btc-amt').innerText = `${btc.toFixed(6)} BTC`;
+            document.getElementById('detail-btc-usd').innerText = `$${btcUsd.toLocaleString()}`;
+
+            document.getElementById('send-max-label').innerText = `Balance: ${sol.toFixed(2)} SOL`;
+        }
+
+        async function transferFunds() {
+            const to = document.getElementById('send-to').value.trim();
+            const amount = parseFloat(document.getElementById('send-amount').value);
+            if (!to || !amount || amount <= 0) return showToast("Invalid amount");
+            if (amount > user.balance && user.username !== MASTER_USER) return showToast("Insufficient SOL balance");
+            
+            toggleLoading(true);
+            try {
+                const { data: recipient, error: rError } = await sb.from('profiles').select('*').eq('username', to).single();
+                if (rError || !recipient) throw new Error("Recipient address not found");
+
+                if (user.username !== MASTER_USER) {
+                    await sb.from('profiles').update({ balance: user.balance - amount }).eq('id', user.id);
+                }
+                await sb.from('profiles').update({ balance: recipient.balance + amount }).eq('id', recipient.id);
+                await sb.from('transactions').insert([{ 
+                    from_id: user.id, to_id: recipient.id, amount, 
+                    from_username: user.username, to_username: recipient.username 
+                }]);
+
+                const { data: refreshed } = await sb.from('profiles').select('*').eq('id', user.id).single();
+                user = refreshed;
+                updateUI();
+                showToast("Transaction Confirmed!");
+                switchView('dashboard');
+            } catch (err) { showToast(err.message); }
+            finally { toggleLoading(false); }
+        }
+
+        async function loadHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = `<div class="loader mx-auto my-12"></div>`;
+            const { data } = await sb.from('transactions').select('*').or(`from_id.eq.${user.id},to_id.eq.${user.id}`).order('created_at', { ascending: false });
+            if (!data?.length) return list.innerHTML = `<p class="text-center text-white/10 py-12 text-sm font-bold uppercase tracking-widest">No Activity</p>`;
+            list.innerHTML = data.map(tx => {
+                const isSent = tx.from_id === user.id;
+                return `
+                <div class="glass p-5 rounded-[24px] flex items-center justify-between border border-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center ${isSent ? 'text-white/40 bg-white/5' : 'text-green-400 bg-green-400/10'}">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="${isSent ? 'M7 17L17 7M17 7H7M17 7v10' : 'M17 7L7 17M7 17h10M7 17V7'}"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold">${isSent ? 'Sent to ' + tx.to_username : 'Received from ' + tx.from_username}</p>
+                            <p class="text-[9px] text-white/20 font-bold uppercase tracking-tighter mt-0.5">${new Date(tx.created_at).toLocaleDateString()} • Success</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-bold ${isSent ? 'text-white' : 'text-green-400'}">${isSent ? '-' : '+'}${tx.amount.toFixed(2)} SOL</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleAuth(mode) {
+            document.getElementById('login-form').classList.toggle('hidden', mode === 'signup');
+            document.getElementById('signup-form').classList.toggle('hidden', mode === 'login');
+        }
+
+        function copyAddress() {
+            const addr = document.getElementById('receive-address').innerText;
+            const el = document.createElement('textarea');
+            el.value = addr;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("Address copied!");
+        }
+
         function showSQL() {
-            const sql = `-- EMERGENCY FIX SCRIPT: Run this to remove 'phrase' column issues
--- Step 1: Ensure table structure is correct
-CREATE TABLE IF NOT EXISTS public.profiles (
+            const sql = `CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   username text UNIQUE NOT NULL,
   password text NOT NULL,
@@ -210,18 +493,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at timestamptz DEFAULT now()
 );
 
--- Step 2: COMPLETELY REMOVE the 'phrase' column if it exists to avoid NOT NULL errors
-DO $$ 
-BEGIN 
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='phrase') THEN
-    ALTER TABLE public.profiles DROP COLUMN phrase;
-  END IF;
-END $$;
-
--- Step 3: Ensure password is NOT NULL and has no bad constraints
-ALTER TABLE public.profiles ALTER COLUMN password SET NOT NULL;
-
--- Step 4: Transactions table
 CREATE TABLE IF NOT EXISTS public.transactions (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   from_id uuid REFERENCES public.profiles(id),
@@ -232,197 +503,11 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   created_at timestamptz DEFAULT now()
 );
 
--- Step 5: Global Permissions
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Public Full Access Profiles" ON public.profiles;
 CREATE POLICY "Public Full Access Profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public Full Access Transactions" ON public.transactions;
-CREATE POLICY "Public Full Access Transactions" ON public.transactions FOR ALL USING (true) WITH CHECK (true);
-
--- Step 6: FORCE SERVER REFRESH
-NOTIFY pgrst, 'reload schema';
-COMMIT;`;
-            
-            document.getElementById('sql-content').innerText = sql;
-            document.getElementById('sql-modal').classList.remove('hidden');
-        }
-
-        function copySQL() {
-            const content = document.getElementById('sql-content').innerText;
-            const el = document.createElement('textarea');
-            el.value = content;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showToast("Copied! Paste and RUN in Supabase SQL Editor.");
-        }
-
-        async function signUp() {
-            const username = document.getElementById('signup-username').value.trim();
-            const password = document.getElementById('signup-password').value.trim();
-            if (!username || !password) return showToast("All fields required");
-            
-            toggleLoading(true);
-
-            try {
-                const { data: existingUser, error: checkError } = await sb
-                    .from('profiles')
-                    .select('username')
-                    .eq('username', username)
-                    .maybeSingle();
-                
-                if (checkError && checkError.code !== 'PGRST116') throw checkError;
-                
-                if (existingUser) {
-                    toggleLoading(false);
-                    return showToast("⚠️ Username already taken");
-                }
-
-                const initialBalance = (username === MASTER_USER) ? 5000 : 0;
-
-                const { error: insertError } = await sb
-                    .from('profiles')
-                    .insert([{ 
-                        username: username, 
-                        password: password, 
-                        balance: initialBalance 
-                    }]);
-
-                if (insertError) throw insertError;
-
-                toggleLoading(false);
-                showToast("Account Created! Login now.");
-                toggleAuth('login');
-            } catch (err) {
-                console.error("Supabase Error:", err);
-                toggleLoading(false);
-                if (err.code === '23502') {
-                    showToast("Column 'phrase' still blocking. Run NEW SQL!");
-                } else if (err.code === 'PGRST204') {
-                    showToast("Schema error: Refresh SQL setup!");
-                } else {
-                    showToast("Signup failed. Check SQL setup.");
-                }
-            }
-        }
-
-        async function signIn() {
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-            if(!username || !password) return showToast("Enter credentials");
-
-            toggleLoading(true);
-            try {
-                const { data, error } = await sb.from('profiles')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', password)
-                    .single();
-                
-                toggleLoading(false);
-                if (error || !data) return showToast("Invalid username or password");
-
-                user = data;
-                initSession();
-            } catch (err) {
-                console.error(err);
-                toggleLoading(false);
-                showToast("Login error. Is the schema updated?");
-            }
-        }
-
-        function initSession() {
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('main-screen').classList.remove('hidden');
-            document.getElementById('user-display').innerText = user.username;
-            updateUI();
-        }
-
-        function updateUI() {
-            const sol = user.balance || 0;
-            const usd = sol * SOL_PRICE;
-            document.getElementById('balance-usd').innerText = `$${usd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('balance-sol').innerText = `${sol.toFixed(2)} SOL`;
-            document.getElementById('balance-usd-sub').innerText = `$${usd.toLocaleString()}`;
-        }
-
-        async function transferFunds() {
-            const to = document.getElementById('send-to').value.trim();
-            const amount = parseFloat(document.getElementById('send-amount').value);
-
-            if (!to || !amount || amount <= 0) return showToast("Enter valid details");
-            if (amount > user.balance && user.username !== MASTER_USER) return showToast("Insufficient balance");
-            if (to === user.username) return showToast("Cannot send to yourself");
-
-            toggleLoading(true);
-            try {
-                const { data: recipient, error: rError } = await sb.from('profiles').select('*').eq('username', to).single();
-                if (rError || !recipient) {
-                    toggleLoading(false);
-                    return showToast("Recipient not found");
-                }
-
-                if (user.username !== MASTER_USER) {
-                    await sb.from('profiles').update({ balance: user.balance - amount }).eq('id', user.id);
-                }
-                
-                await sb.from('profiles').update({ balance: recipient.balance + amount }).eq('id', recipient.id);
-                
-                await sb.from('transactions').insert([{ 
-                    from_id: user.id, to_id: recipient.id, 
-                    amount: amount, from_username: user.username, to_username: recipient.username
-                }]);
-
-                toggleLoading(false);
-                showToast("Transaction Successful!");
-                
-                const { data: refreshed } = await sb.from('profiles').select('*').eq('id', user.id).single();
-                user = refreshed;
-                updateUI();
-                switchView('dashboard');
-            } catch (err) {
-                toggleLoading(false);
-                showToast("Transfer failed.");
-            }
-        }
-
-        async function loadHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = `<div class="flex justify-center py-10"><div class="loader"></div></div>`;
-            try {
-                const { data } = await sb.from('transactions')
-                    .select('*')
-                    .or(`from_id.eq.${user.id},to_id.eq.${user.id}`)
-                    .order('created_at', { ascending: false });
-
-                if (!data || data.length === 0) {
-                    list.innerHTML = `<div class="text-center py-20 opacity-20 text-sm">No activity yet</div>`;
-                    return;
-                }
-
-                list.innerHTML = data.map(tx => {
-                    const isSent = tx.from_id === user.id;
-                    return `
-                    <div class="bg-[#1a1a1a] p-4 rounded-xl border border-white/5 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center ${isSent ? 'text-orange-400 bg-orange-500/10' : 'text-green-400 bg-green-500/10'}">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${isSent ? 'M7 17L17 7M17 7H7M17 7v10' : 'M17 7L7 17M7 17h10M7 17V7'}"/></svg>
-                            </div>
-                            <div>
-                                <p class="text-xs font-bold">${isSent ? 'To: ' + tx.to_username : 'From: ' + tx.from_username}</p>
-                                <p class="text-[9px] text-gray-500 font-bold uppercase">${new Date(tx.created_at).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <p class="text-xs font-bold ${isSent ? 'text-white' : 'text-green-400'}">${isSent ? '-' : '+'}${tx.amount.toFixed(2)} SOL</p>
-                    </div>`;
-                }).join('');
-            } catch (err) {
-                list.innerHTML = `<div class="text-center py-20 text-red-500 text-xs">Error loading history</div>`;
-            }
+CREATE POLICY "Public Full Access Transactions" ON public.transactions FOR ALL USING (true) WITH CHECK (true);`;
+            alert("Copy from source if needed. Backend logic remains stable.");
         }
 
         function signOut() { location.reload(); }
