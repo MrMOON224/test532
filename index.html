@@ -1,506 +1,431 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Nexus Vault</title>
-
-    <!-- Tailwind -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phantom Mobile Fullstack</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
-        :root {
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
-            --blue: #3b82f6;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #000;
-            color: white;
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .glass {
-            background: rgba(255,255,255,0.03);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .btn-gradient {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-        }
-
-        .view {
-            height: calc(100vh - 160px - var(--safe-bottom));
-            overflow-y: auto;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-        }
-        .view::-webkit-scrollbar { display: none; }
-
-        .tab-active {
-            color: var(--blue) !important;
-            position: relative;
-        }
-        .tab-active::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 5px;
-            height: 5px;
-            background: var(--blue);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--blue);
-        }
-
-        .nft-card {
-            aspect-ratio: 1/1;
-            background-size: cover;
-            background-position: center;
-        }
-
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .modal-animate { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .mobile-viewport { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; background: #111; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        @media (min-width: 640px) { .mobile-viewport { border: 1px solid #333; border-radius: 40px; } }
+        .phantom-gradient { background: linear-gradient(135deg, #ab9ff2 0%, #4e44ce 100%); }
+        .tab-active { color: #ab9ff2; }
+        input:focus { outline: none; border-color: #ab9ff2; }
+        .loader { border: 2px solid #333; border-top: 2px solid #ab9ff2; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
+<body>
 
-<body class="flex justify-center items-center">
-
-<div class="w-full max-w-md h-full bg-[#050505] shadow-2xl overflow-hidden relative flex flex-col border-x border-white/5">
-
-    <!-- ONBOARDING -->
-    <div id="onboard" class="absolute inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-10 hidden">
-        <div class="text-center mb-12">
-            <div class="w-24 h-24 bg-blue-600 rounded-[2.5rem] mx-auto mb-6 flex items-center justify-center text-4xl shadow-xl shadow-blue-500/20">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <h1 class="text-5xl font-black mb-3 tracking-tighter italic">NEXUS</h1>
-            <p class="text-gray-400 text-sm">Secure Peer-to-Peer Vault Architecture</p>
+    <div class="mobile-viewport" id="app">
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="absolute inset-0 z-50 bg-black flex items-center justify-center hidden">
+            <div class="loader"></div>
         </div>
 
-        <!-- Create Section -->
-        <div id="onboarding-main" class="w-full space-y-4">
-            <div class="glass p-4 rounded-3xl mb-2">
-                <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">Vault Identity</p>
-                <input id="new-vault-name" placeholder="Enter Vault Name..." class="bg-transparent w-full p-2 font-bold text-white outline-none border-b border-white/10 focus:border-blue-500 transition-colors" value="Personal Vault"/>
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="h-full w-full flex flex-col items-center justify-center p-8 animate__animated animate__fadeIn">
+            <div class="w-16 h-16 phantom-gradient rounded-2xl flex items-center justify-center shadow-lg mb-8">
+                <svg width="32" height="32" viewBox="0 0 128 128" fill="white"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0zm0 112c-26.5 0-48-21.5-48-48S37.5 16 64 16s48 21.5 48 48-21.5 48-48 48z"/></svg>
             </div>
-            <button class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mb-4 active:scale-95 transition-all" onclick="createNewWallet()">Generate Vault</button>
-            <button class="w-full py-5 rounded-3xl glass font-bold active:scale-95 transition-all" onclick="showImportBox()">Import Existing</button>
-        </div>
+            <h1 class="text-3xl font-bold mb-2">Phantom</h1>
+            <p id="auth-subtitle" class="text-gray-400 text-center text-sm mb-8 px-4">Securely access your digital assets.</p>
 
-        <div id="import-box" class="hidden w-full mt-6 animate-fadeIn">
-            <input id="import-id" placeholder="Master Key or bc1q..." class="glass w-full p-4 rounded-2xl font-mono text-blue-400 outline-none mb-3 border-white/10"/>
-            <p class="text-[10px] text-gray-500 mb-3 px-2">Tip: Use 'MASTER_ADMIN_2024' for the master account.</p>
-            <div class="flex gap-2">
-                <button class="flex-1 glass py-4 rounded-2xl font-black text-gray-400" onclick="hideImportBox()">Back</button>
-                <button class="flex-[2] glass py-4 rounded-2xl font-black text-blue-500" onclick="importWallet()">Sync Node</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN UI -->
-    <div id="app" class="hidden flex flex-col h-full">
-
-        <!-- HEADER -->
-        <header class="p-6 pt-[calc(1.5rem+var(--safe-top))] glass flex justify-between items-center border-b border-white/5">
-            <div>
-                <p id="wallet-name" class="font-black text-xl tracking-tight">Vault</p>
-                <div class="text-[10px] text-emerald-500 flex items-center gap-1 font-bold uppercase tracking-widest">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Backend Synced
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="copyAddress()" class="glass w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all">
-                    <i class="fa-regular fa-copy text-gray-400"></i>
-                </button>
-                <button onclick="toggleModal('settings-modal')" class="glass w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all">
-                    <i class="fa-solid fa-sliders text-gray-400"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- VIEW: WALLET -->
-        <main id="wallet-view" class="view px-6 pt-6 active-view">
-            <p class="uppercase text-gray-600 text-[10px] font-black tracking-[0.2em] mb-1">Total Assets</p>
-            <div class="flex items-end gap-3 mb-8">
-                <h1 id="total" class="text-5xl font-black tracking-tighter">$0.00</h1>
-                <button onclick="togglePrivacy()" class="mb-2 text-gray-500"><i id="privacy-icon" class="fa-regular fa-eye"></i></button>
-            </div>
-
-            <div class="grid grid-cols-4 gap-3 mb-10">
-                <button onclick="openSendModal()" class="flex flex-col items-center">
-                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-blue-400"><i class="fa-solid fa-arrow-up"></i></div>
-                    <span class="text-[10px] mt-2 font-black opacity-60">SEND</span>
-                </button>
-                <button onclick="copyAddress()" class="flex flex-col items-center">
-                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-emerald-400"><i class="fa-solid fa-qrcode"></i></div>
-                    <span class="text-[10px] mt-2 font-black opacity-60">RECEIVE</span>
-                </button>
-                <button onclick="switchTab('market')" class="flex flex-col items-center">
-                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-orange-400"><i class="fa-solid fa-repeat"></i></div>
-                    <span class="text-[10px] mt-2 font-black opacity-60">SWAP</span>
-                </button>
-                <button onclick="switchTab('nfts')" class="flex flex-col items-center">
-                    <div class="glass w-14 h-14 rounded-2xl flex items-center justify-center text-purple-400"><i class="fa-solid fa-shapes"></i></div>
-                    <span class="text-[10px] mt-2 font-black opacity-60">NFTS</span>
-                </button>
-            </div>
-
-            <div id="assets" class="space-y-3"></div>
-
-            <h2 class="mt-10 font-black text-lg tracking-tight flex items-center justify-between">
-                Global Ledger History
-                <i class="fa-solid fa-chevron-right text-[10px] opacity-30"></i>
-            </h2>
-            <div id="history" class="mt-4 pb-24 space-y-3"></div>
-        </main>
-
-        <!-- MARKET VIEW -->
-        <main id="market-view" class="view px-6 pt-6 hidden">
-            <h2 class="text-3xl font-black mb-6">Market</h2>
-            <div id="market-list" class="space-y-4 pb-24"></div>
-        </main>
-
-        <!-- NFT VIEW -->
-        <main id="nfts-view" class="view px-6 pt-6 hidden">
-            <h2 class="text-3xl font-black mb-6">Collectibles</h2>
-            <div class="grid grid-cols-2 gap-4 pb-24">
-                <div class="glass p-2 rounded-[2rem]">
-                    <div class="nft-card rounded-[1.5rem] mb-3 bg-gradient-to-br from-purple-600 to-blue-600"></div>
-                    <p class="px-2 font-bold text-xs">Nexus Punk #402</p>
-                </div>
-            </div>
-        </main>
-
-        <!-- NEWS VIEW -->
-        <main id="news-view" class="view px-6 pt-6 hidden">
-            <h2 class="text-3xl font-black mb-6">Insights</h2>
-            <div id="news-list" class="space-y-4 pb-24">
-                <div class="glass p-5 rounded-3xl border-blue-500/20">
-                    <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">System Message</span>
-                    <p class="font-bold mt-2">P2P Transfers between vaults are now zero-fee.</p>
-                </div>
-            </div>
-        </main>
-
-        <!-- TAB BAR -->
-        <footer class="absolute bottom-0 left-0 right-0 h-20 glass px-6 flex justify-between items-center pb-[var(--safe-bottom)] border-t border-white/5">
-            <button class="nav tab-active flex flex-col items-center flex-1" onclick="switchTab('wallet')">
-                <i class="fa-solid fa-wallet text-xl"></i>
-                <div class="text-[9px] mt-1 font-black uppercase opacity-60">Vault</div>
-            </button>
-            <button class="nav text-gray-500 flex flex-col items-center flex-1" onclick="switchTab('market')">
-                <i class="fa-solid fa-chart-line text-xl"></i>
-                <div class="text-[9px] mt-1 font-black uppercase opacity-60">Market</div>
-            </button>
-            <button class="nav text-gray-500 flex flex-col items-center flex-1" onclick="switchTab('nfts')">
-                <i class="fa-solid fa-layer-group text-xl"></i>
-                <div class="text-[9px] mt-1 font-black uppercase opacity-60">NFTs</div>
-            </button>
-            <button class="nav text-gray-500 flex flex-col items-center flex-1" onclick="switchTab('news')">
-                <i class="fa-solid fa-rss text-xl"></i>
-                <div class="text-[9px] mt-1 font-black uppercase opacity-60">News</div>
-            </button>
-        </footer>
-    </div>
-
-    <!-- MODAL: SEND -->
-    <div id="send-modal" class="fixed inset-0 z-[200] hidden">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleModal('send-modal')"></div>
-        <div class="absolute bottom-0 left-0 right-0 glass rounded-t-[3rem] p-8 modal-animate pb-[calc(2rem+var(--safe-bottom))]">
-            <h3 class="text-2xl font-black mb-6">P2P Transfer</h3>
-            <div class="space-y-4">
-                <div class="glass p-4 rounded-2xl">
-                    <p class="text-[10px] font-black opacity-40 mb-1">RECEIVING VAULT ID</p>
-                    <input id="send-to" placeholder="bc1q..." class="bg-transparent w-full font-mono text-blue-400 outline-none text-sm" />
-                </div>
-                <div class="glass p-4 rounded-2xl">
-                    <p class="text-[10px] font-black opacity-40 mb-1">AMOUNT TO BROADCAST</p>
-                    <div class="flex justify-between items-center">
-                        <input id="send-amt" type="number" placeholder="0.00" class="bg-transparent w-1/2 font-black text-2xl outline-none" />
-                        <select id="send-asset" class="bg-transparent font-black text-blue-400 outline-none">
-                            <option value="BTC">BTC</option>
-                            <option value="ETH">ETH</option>
-                            <option value="USDT">USDT</option>
-                        </select>
+            <div class="w-full space-y-4">
+                <!-- Login Form -->
+                <div id="login-form">
+                    <input type="text" id="login-username" placeholder="Username" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-3 text-white">
+                    <input type="password" id="login-password" placeholder="Password" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-4 text-white">
+                    <button onclick="signIn()" class="w-full bg-[#ab9ff2] text-black font-bold py-4 rounded-xl hover:bg-[#c1b8f5] transition-colors">Unlock Wallet</button>
+                    <button onclick="toggleAuth('signup')" class="w-full text-purple-400 font-semibold mt-4 text-sm">Create new account</button>
+                    
+                    <div class="mt-8 pt-6 border-t border-white/5">
+                        <button onclick="showSQL()" class="w-full text-gray-600 text-[10px] uppercase font-bold tracking-widest hover:text-gray-400 transition-colors">Get Database SQL Setup</button>
                     </div>
                 </div>
-                <button id="send-btn" class="w-full py-5 rounded-3xl btn-gradient font-black text-xl mt-4" onclick="executeP2PTransfer()">Sync Transfer to Server</button>
+
+                <!-- Signup Form -->
+                <div id="signup-form" class="hidden">
+                    <input type="text" id="signup-username" placeholder="Choose Username" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-3 text-white">
+                    <input type="password" id="signup-password" placeholder="Set Password" class="w-full bg-[#222] border border-transparent rounded-xl px-4 py-4 mb-4 text-white">
+                    <button onclick="signUp()" class="w-full bg-[#ab9ff2] text-black font-bold py-4 rounded-xl">Register Wallet</button>
+                    <button onclick="toggleAuth('login')" class="w-full text-purple-400 font-semibold mt-4 text-sm">Back to login</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- MODAL: SETTINGS -->
-    <div id="settings-modal" class="fixed inset-0 z-[200] hidden">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleModal('settings-modal')"></div>
-        <div class="absolute bottom-0 left-0 right-0 glass rounded-t-[3rem] p-8 modal-animate pb-[calc(2rem+var(--safe-bottom))]">
-            <h3 class="text-2xl font-black mb-6">Vault Config</h3>
-            <div class="space-y-3">
-                <button onclick="copyAddress()" class="w-full glass p-5 rounded-2xl flex justify-between font-bold text-blue-400">
-                    Vault ID: <span class="opacity-50 font-mono text-xs" id="display-id">...</span>
-                </button>
-                <button onclick="logout()" class="w-full glass p-5 rounded-2xl flex justify-between font-bold text-red-400">
-                    Disconnect Session <i class="fa-solid fa-power-off opacity-40"></i>
-                </button>
+        <!-- SQL Modal -->
+        <div id="sql-modal" class="absolute inset-0 z-[60] bg-black/95 p-6 flex flex-col hidden animate__animated animate__fadeIn">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-purple-400 text-sm">Supabase Setup Guide</h3>
+                <button onclick="document.getElementById('sql-modal').classList.add('hidden')" class="text-gray-500 text-xl">✕</button>
             </div>
+            <p class="text-[11px] text-gray-300 mb-4 bg-purple-900/20 p-3 rounded-lg border border-purple-500/30">
+                <b>FINAL FIX FOR 23502:</b> Run this script to completely remove the 'phrase' requirement and refresh the server cache.
+            </p>
+            <div class="flex-1 overflow-auto bg-[#0a0a0a] rounded-xl p-4 border border-white/10">
+                <pre id="sql-content" class="text-[9px] font-mono text-gray-400 leading-relaxed"></pre>
+            </div>
+            <button onclick="copySQL()" class="w-full bg-white text-black font-bold py-3 rounded-xl mt-4 text-xs">Copy SQL Code</button>
         </div>
+
+        <!-- Main Screen -->
+        <div id="main-screen" class="hidden h-full flex flex-col animate__animated animate__fadeIn">
+            <header class="p-4 flex items-center justify-between border-b border-white/5 bg-[#111]">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 phantom-gradient rounded-lg flex items-center justify-center font-bold text-xs shadow-inner">P</div>
+                    <div>
+                        <p id="user-display" class="text-xs font-bold leading-none mb-1"></p>
+                        <p class="text-[10px] text-green-400 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Mainnet Beta
+                        </p>
+                    </div>
+                </div>
+                <button onclick="signOut()" class="text-gray-500 hover:text-red-400 transition-colors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar" id="view-container">
+                <!-- Dashboard -->
+                <div id="view-dashboard">
+                    <div class="text-center py-10">
+                        <p id="balance-usd" class="text-4xl font-bold mb-1 tracking-tight">$0.00</p>
+                        <p class="text-gray-500 text-sm font-medium">Portfolio Balance</p>
+                    </div>
+
+                    <div class="flex gap-4 mb-8">
+                        <button onclick="switchView('send')" class="flex-1 flex flex-col items-center gap-2 group">
+                            <div class="w-12 h-12 bg-[#ab9ff2] text-black rounded-full flex items-center justify-center font-bold group-active:scale-95 transition-transform">↑</div>
+                            <span class="text-[10px] font-bold text-gray-500">Send</span>
+                        </button>
+                        <button class="flex-1 flex flex-col items-center gap-2 group">
+                            <div class="w-12 h-12 bg-[#222] text-[#ab9ff2] rounded-full flex items-center justify-center font-bold group-active:scale-95 transition-transform">↓</div>
+                            <span class="text-[10px] font-bold text-gray-500">Receive</span>
+                        </button>
+                        <button class="flex-1 flex flex-col items-center gap-2 group opacity-50">
+                            <div class="w-12 h-12 bg-[#222] text-gray-400 rounded-full flex items-center justify-center font-bold">⇄</div>
+                            <span class="text-[10px] font-bold text-gray-500">Swap</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-[#1a1a1a] rounded-2xl p-4 flex items-center justify-between border border-white/5">
+                        <div class="flex items-center gap-3">
+                            <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" class="w-10 h-10 rounded-full shadow-lg">
+                            <div>
+                                <p class="font-bold text-sm">Solana</p>
+                                <p class="text-[10px] text-gray-500 font-bold">SOL</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p id="balance-sol" class="font-bold text-sm">0.00 SOL</p>
+                            <p id="balance-usd-sub" class="text-[10px] text-gray-500 font-medium">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Send -->
+                <div id="view-send" class="hidden animate__animated animate__fadeIn">
+                    <h2 class="text-xl font-bold mb-6">Send SOL</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 mb-2 block">Recipient Username</label>
+                            <input type="text" id="send-to" placeholder="e.g. MasterBanker" class="w-full bg-[#222] p-4 rounded-xl border border-transparent">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 mb-2 block">Amount</label>
+                            <div class="relative">
+                                <input type="number" id="send-amount" placeholder="0.00" class="w-full bg-[#222] p-4 rounded-xl border border-transparent pr-12">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-400">SOL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="transferFunds()" id="transfer-btn" class="w-full bg-[#ab9ff2] text-black font-bold py-4 rounded-xl mt-8 shadow-lg">Send Now</button>
+                    <button onclick="switchView('dashboard')" class="w-full text-gray-500 mt-4 text-sm font-semibold">Cancel</button>
+                </div>
+
+                <!-- History -->
+                <div id="view-history" class="hidden animate__animated animate__fadeIn">
+                    <h2 class="text-xl font-bold mb-6">Activity</h2>
+                    <div id="history-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <nav class="h-20 bg-black border-t border-white/5 flex items-center justify-around">
+                <button onclick="switchView('dashboard')" class="nav-btn p-3 tab-active" id="btn-dash"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+                <button onclick="switchView('history')" class="nav-btn p-3 text-gray-600" id="btn-hist"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>
+            </nav>
+        </div>
+
+        <div id="toast" class="fixed bottom-24 left-6 right-6 p-4 bg-white text-black rounded-xl font-bold text-center text-sm transform translate-y-40 transition-transform duration-300 z-[100] shadow-2xl"></div>
     </div>
 
-</div>
+    <script>
+        const supabaseConfig = {
+            url: "https://ehhgrwcgckcqbjoxitsx.supabase.co",
+            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGdyd2NnY2tjcWJqb3hpdHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjg3ODksImV4cCI6MjA4MzcwNDc4OX0.fJIZ0-Fu3wFIZmI3pFwJ83IH_sWRMWc1K6B3GQvLU1k"
+        };
 
-<!-- TOASTS -->
-<div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[300] w-full max-w-[280px] space-y-2 pointer-events-none"></div>
+        const sb = supabase.createClient(supabaseConfig.url, supabaseConfig.key);
+        const MASTER_USER = "MasterBanker";
+        const SOL_PRICE = 145.50;
+        let user = null;
 
-<script>
-const SUPABASE_URL = "https://tmvimacikrnrizxtcesf.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtdmltYWNpa3Jucml6eHRjZXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDc5NzgsImV4cCI6MjA4MzY4Mzk3OH0.dwh4CWwxE53hbhgjYqOqHZYa1tNyUKNZvdb6Kq5pLC4";
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const MASTER_KEY = "MASTER_ADMIN_2024";
-
-let walletId = localStorage.getItem("nexus_wallet");
-let privacy = false;
-let user = {
-    name: "Standard Vault",
-    balances : {
-        BTC: {amount:0, rate:67000, icon:"fa-brands fa-bitcoin", color:"text-orange-400"},
-        ETH: {amount:0, rate:3500, icon:"fa-brands fa-ethereum", color:"text-indigo-400"},
-        USDT:{amount:0, rate:1, icon:"fa-solid fa-dollar-sign", color:"text-green-400"},
-    },
-    history:[]
-};
-
-const masterProfile = {
-    name: "Master Nexus Account",
-    balances: {
-        BTC: {amount:10, rate:67000, icon:"fa-brands fa-bitcoin", color:"text-orange-400"},
-        ETH: {amount:50, rate:3500, icon:"fa-brands fa-ethereum", color:"text-indigo-400"},
-        USDT:{amount:130000, rate:1, icon:"fa-solid fa-dollar-sign", color:"text-green-400"},
-    },
-    history:[]
-};
-
-window.onload = async () => {
-    if (!walletId) {
-        document.getElementById("onboard").classList.remove("hidden");
-    } else {
-        showApp();
-        await loadWallet();
-        initRealtime();
-    }
-};
-
-async function createNewWallet() {
-    const nameInput = document.getElementById("new-vault-name").value.trim();
-    if (!nameInput) return showToast("Please name your vault");
-
-    const chars = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-    let addr = "bc1q";
-    for (let i=0;i<38;i++) addr += chars[Math.floor(Math.random()*chars.length)];
-    
-    walletId = addr;
-    user.name = nameInput;
-
-    localStorage.setItem("nexus_wallet", addr);
-    await db.from("wallets").insert({ id: addr, data: user });
-    
-    showApp();
-    showToast(`Vault "${nameInput}" Synced`);
-}
-
-async function loadWallet(){
-    try {
-        let {data, error} = await db.from("wallets").select("data").eq("id", walletId).maybeSingle();
-        
-        if (data) {
-            user = data.data;
-        } else if (walletId === MASTER_KEY) {
-            user = masterProfile;
-            await db.from("wallets").upsert({ id: MASTER_KEY, data: user });
-        } else {
-            localStorage.clear();
-            location.reload();
+        function toggleAuth(mode) {
+            ['login-form', 'signup-form'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(`${mode}-form`).classList.remove('hidden');
         }
-        render();
-    } catch(e) { console.error(e); render(); }
-}
 
-function initRealtime(){
-    db.channel("vault_sync").on("postgres_changes",
-        {event:"UPDATE", schema:"public", table:"wallets"},
-        (p) => { 
-            if(p.new && p.new.id === walletId) {
-                user = p.new.data;
-                render();
+        function switchView(view) {
+            ['view-dashboard', 'view-send', 'view-history'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            document.getElementById('btn-dash').className = `nav-btn p-3 ${view === 'dashboard' ? 'tab-active' : 'text-gray-600'}`;
+            document.getElementById('btn-hist').className = `nav-btn p-3 ${view === 'history' ? 'tab-active' : 'text-gray-600'}`;
+            if(view === 'history') loadHistory();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.remove('translate-y-40');
+            setTimeout(() => t.classList.add('translate-y-40'), 3000);
+        }
+
+        function toggleLoading(show) {
+            document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+        }
+
+        function showSQL() {
+            const sql = `-- EMERGENCY FIX SCRIPT: Run this to remove 'phrase' column issues
+-- Step 1: Ensure table structure is correct
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  username text UNIQUE NOT NULL,
+  password text NOT NULL,
+  balance float8 DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Step 2: COMPLETELY REMOVE the 'phrase' column if it exists to avoid NOT NULL errors
+DO $$ 
+BEGIN 
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='phrase') THEN
+    ALTER TABLE public.profiles DROP COLUMN phrase;
+  END IF;
+END $$;
+
+-- Step 3: Ensure password is NOT NULL and has no bad constraints
+ALTER TABLE public.profiles ALTER COLUMN password SET NOT NULL;
+
+-- Step 4: Transactions table
+CREATE TABLE IF NOT EXISTS public.transactions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  from_id uuid REFERENCES public.profiles(id),
+  to_id uuid REFERENCES public.profiles(id),
+  from_username text,
+  to_username text,
+  amount float8 NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Step 5: Global Permissions
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public Full Access Profiles" ON public.profiles;
+CREATE POLICY "Public Full Access Profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Full Access Transactions" ON public.transactions;
+CREATE POLICY "Public Full Access Transactions" ON public.transactions FOR ALL USING (true) WITH CHECK (true);
+
+-- Step 6: FORCE SERVER REFRESH
+NOTIFY pgrst, 'reload schema';
+COMMIT;`;
+            
+            document.getElementById('sql-content').innerText = sql;
+            document.getElementById('sql-modal').classList.remove('hidden');
+        }
+
+        function copySQL() {
+            const content = document.getElementById('sql-content').innerText;
+            const el = document.createElement('textarea');
+            el.value = content;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("Copied! Paste and RUN in Supabase SQL Editor.");
+        }
+
+        async function signUp() {
+            const username = document.getElementById('signup-username').value.trim();
+            const password = document.getElementById('signup-password').value.trim();
+            if (!username || !password) return showToast("All fields required");
+            
+            toggleLoading(true);
+
+            try {
+                const { data: existingUser, error: checkError } = await sb
+                    .from('profiles')
+                    .select('username')
+                    .eq('username', username)
+                    .maybeSingle();
+                
+                if (checkError && checkError.code !== 'PGRST116') throw checkError;
+                
+                if (existingUser) {
+                    toggleLoading(false);
+                    return showToast("⚠️ Username already taken");
+                }
+
+                const initialBalance = (username === MASTER_USER) ? 5000 : 0;
+
+                const { error: insertError } = await sb
+                    .from('profiles')
+                    .insert([{ 
+                        username: username, 
+                        password: password, 
+                        balance: initialBalance 
+                    }]);
+
+                if (insertError) throw insertError;
+
+                toggleLoading(false);
+                showToast("Account Created! Login now.");
+                toggleAuth('login');
+            } catch (err) {
+                console.error("Supabase Error:", err);
+                toggleLoading(false);
+                if (err.code === '23502') {
+                    showToast("Column 'phrase' still blocking. Run NEW SQL!");
+                } else if (err.code === 'PGRST204') {
+                    showToast("Schema error: Refresh SQL setup!");
+                } else {
+                    showToast("Signup failed. Check SQL setup.");
+                }
             }
         }
-    ).subscribe();
-}
 
-function render(){
-    document.getElementById("wallet-name").innerText = user.name;
-    document.getElementById("display-id").innerText = walletId.substring(0,10)+"...";
-    
-    let total = 0;
-    for (let k in user.balances) total += user.balances[k].amount * user.balances[k].rate;
-    document.getElementById("total").innerText = privacy ? "••••••" : "$" + total.toLocaleString(undefined, {minimumFractionDigits: 2});
+        async function signIn() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            if(!username || !password) return showToast("Enter credentials");
 
-    document.getElementById("assets").innerHTML = Object.entries(user.balances).map(([k,v])=>`
-        <div class="glass p-4 rounded-3xl flex justify-between items-center border-white/5">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
-                    <i class="${v.icon} text-2xl ${v.color}"></i>
-                </div>
-                <div>
-                    <p class="font-black text-sm">${k}</p>
-                    <p class="text-[10px] opacity-40 font-bold uppercase tracking-wider">${v.amount.toFixed(4)} ${k}</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <p class="font-black text-sm">${privacy?"••••":"$"+(v.amount*v.rate).toLocaleString()}</p>
-            </div>
-        </div>
-    `).join("");
+            toggleLoading(true);
+            try {
+                const { data, error } = await sb.from('profiles')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)
+                    .single();
+                
+                toggleLoading(false);
+                if (error || !data) return showToast("Invalid username or password");
 
-    document.getElementById("history").innerHTML = (user.history && user.history.length) ? 
-    user.history.slice(-15).reverse().map(h => `
-        <div class="glass p-4 rounded-2xl flex justify-between items-center text-[11px] border-white/5">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                    <i class="fa-solid ${h.type==='Sent'?'fa-arrow-up text-red-400':'fa-arrow-down text-emerald-400'}"></i>
-                </div>
-                <div>
-                    <p class="font-black">${h.type} ${h.asset}</p>
-                    <p class="opacity-30">P2P: ${h.party.substring(0,8)}...</p>
-                </div>
-            </div>
-            <p class="font-black ${h.type==='Sent'?'text-red-400':'text-emerald-400'}">
-                ${h.type==='Sent'?'-':'+'}${h.amount}
-            </p>
-        </div>
-    `).join("") : `<p class="text-center py-10 opacity-20 text-xs font-black italic">NO SERVER ACTIVITY DETECTED</p>`;
-
-    document.getElementById("market-list").innerHTML = [
-        {id:'BTC', p:67000, c:'+1.2%'}, {id:'ETH', p:3500, c:'+0.8%'}, {id:'USDT', p:1.00, c:'0.0%'}
-    ].map(m => `
-        <div class="glass p-5 rounded-3xl flex justify-between items-center border-white/5">
-            <span class="font-bold">${m.id} / USD</span>
-            <div class="text-right">
-                <p class="font-black">$${m.p.toLocaleString()}</p>
-                <p class="text-[10px] text-emerald-400 font-bold">${m.c}</p>
-            </div>
-        </div>
-    `).join("");
-}
-
-// -------------------- P2P TRANSFER USING BACKEND --------------------
-async function executeP2PTransfer(){
-    const btn = document.getElementById('send-btn');
-    let toId = document.getElementById('send-to').value.trim();
-    let amt = parseFloat(document.getElementById('send-amt').value);
-    let asset = document.getElementById('send-asset').value;
-
-    if(!toId || isNaN(amt) || amt <= 0) return showToast("Invalid Inputs");
-    if(toId === walletId) return showToast("Cannot send to self");
-
-    btn.disabled = true;
-    btn.innerText = "Broadcasting...";
-
-    try {
-        // Call backend atomic transfer function
-        let { data, error } = await db.rpc('p2p_transfer', {
-            sender_id: walletId,
-            receiver_id: toId,
-            asset: asset,
-            amount: amt
-        });
-
-        if(error || data !== "Success") {
-            console.error(error);
-            showToast(data || "Transfer Failed");
-        } else {
-            showToast(`Success: ${amt} ${asset} transferred`);
+                user = data;
+                initSession();
+            } catch (err) {
+                console.error(err);
+                toggleLoading(false);
+                showToast("Login error. Is the schema updated?");
+            }
         }
 
-        // Reload wallet to reflect changes
-        await loadWallet();
-        toggleModal('send-modal');
-    } catch(err) {
-        console.error(err);
-        showToast("Ledger Sync Failure");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "Sync Transfer to Server";
-    }
-}
+        function initSession() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.remove('hidden');
+            document.getElementById('user-display').innerText = user.username;
+            updateUI();
+        }
 
-// -------------------- UTILITY FUNCTIONS --------------------
-function switchTab(t){
-    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-    document.getElementById(`${t}-view`).classList.remove('hidden');
-    document.querySelectorAll('.nav').forEach(n => n.classList.remove('tab-active'));
-    if (event) event.currentTarget.classList.add('tab-active');
-}
+        function updateUI() {
+            const sol = user.balance || 0;
+            const usd = sol * SOL_PRICE;
+            document.getElementById('balance-usd').innerText = `$${usd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('balance-sol').innerText = `${sol.toFixed(2)} SOL`;
+            document.getElementById('balance-usd-sub').innerText = `$${usd.toLocaleString()}`;
+        }
 
-function toggleModal(id){ document.getElementById(id).classList.toggle('hidden'); }
-function openSendModal(){ toggleModal('send-modal'); }
-function showToast(m){
-    const t = document.createElement('div');
-    t.className = "glass px-6 py-3 rounded-2xl text-xs font-black text-blue-400 border-blue-500/20 shadow-lg";
-    t.innerText = m;
-    document.getElementById('toast-container').appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
-function copyAddress(){
-    const el = document.createElement('textarea');
-    el.value = walletId;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    showToast("ID Copied to Clipboard");
-}
-function logout(){ localStorage.clear(); location.reload(); }
-function togglePrivacy(){ privacy = !privacy; render(); }
-function showApp(){ 
-    document.getElementById("onboard").classList.add("hidden"); 
-    document.getElementById("app").classList.remove("hidden"); 
-}
-function showImportBox(){ 
-    document.getElementById("import-box").classList.remove("hidden"); 
-    document.getElementById("onboarding-main").classList.add("hidden"); 
-}
-function hideImportBox(){ 
-    document.getElementById("import-box").classList.add("hidden"); 
-    document.getElementById("onboarding-main").classList.remove("hidden"); 
-}
-async function importWallet(){
-    let id = document.getElementById("import-id").value.trim();
-    if(!id) return showToast("Enter ID");
-    walletId = id; 
-    localStorage.setItem("nexus_wallet", id);
-    await loadWallet(); 
-    showApp();
-    initRealtime();
-}
-</script>
+        async function transferFunds() {
+            const to = document.getElementById('send-to').value.trim();
+            const amount = parseFloat(document.getElementById('send-amount').value);
 
+            if (!to || !amount || amount <= 0) return showToast("Enter valid details");
+            if (amount > user.balance && user.username !== MASTER_USER) return showToast("Insufficient balance");
+            if (to === user.username) return showToast("Cannot send to yourself");
+
+            toggleLoading(true);
+            try {
+                const { data: recipient, error: rError } = await sb.from('profiles').select('*').eq('username', to).single();
+                if (rError || !recipient) {
+                    toggleLoading(false);
+                    return showToast("Recipient not found");
+                }
+
+                if (user.username !== MASTER_USER) {
+                    await sb.from('profiles').update({ balance: user.balance - amount }).eq('id', user.id);
+                }
+                
+                await sb.from('profiles').update({ balance: recipient.balance + amount }).eq('id', recipient.id);
+                
+                await sb.from('transactions').insert([{ 
+                    from_id: user.id, to_id: recipient.id, 
+                    amount: amount, from_username: user.username, to_username: recipient.username
+                }]);
+
+                toggleLoading(false);
+                showToast("Transaction Successful!");
+                
+                const { data: refreshed } = await sb.from('profiles').select('*').eq('id', user.id).single();
+                user = refreshed;
+                updateUI();
+                switchView('dashboard');
+            } catch (err) {
+                toggleLoading(false);
+                showToast("Transfer failed.");
+            }
+        }
+
+        async function loadHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = `<div class="flex justify-center py-10"><div class="loader"></div></div>`;
+            try {
+                const { data } = await sb.from('transactions')
+                    .select('*')
+                    .or(`from_id.eq.${user.id},to_id.eq.${user.id}`)
+                    .order('created_at', { ascending: false });
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = `<div class="text-center py-20 opacity-20 text-sm">No activity yet</div>`;
+                    return;
+                }
+
+                list.innerHTML = data.map(tx => {
+                    const isSent = tx.from_id === user.id;
+                    return `
+                    <div class="bg-[#1a1a1a] p-4 rounded-xl border border-white/5 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center ${isSent ? 'text-orange-400 bg-orange-500/10' : 'text-green-400 bg-green-500/10'}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${isSent ? 'M7 17L17 7M17 7H7M17 7v10' : 'M17 7L7 17M7 17h10M7 17V7'}"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold">${isSent ? 'To: ' + tx.to_username : 'From: ' + tx.from_username}</p>
+                                <p class="text-[9px] text-gray-500 font-bold uppercase">${new Date(tx.created_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <p class="text-xs font-bold ${isSent ? 'text-white' : 'text-green-400'}">${isSent ? '-' : '+'}${tx.amount.toFixed(2)} SOL</p>
+                    </div>`;
+                }).join('');
+            } catch (err) {
+                list.innerHTML = `<div class="text-center py-20 text-red-500 text-xs">Error loading history</div>`;
+            }
+        }
+
+        function signOut() { location.reload(); }
+    </script>
 </body>
 </html>
