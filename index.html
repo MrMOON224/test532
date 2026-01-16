@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,14 +11,14 @@
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--accent); scroll-behavior: smooth; letter-spacing: -0.02em; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
-        .nav-glass { background: rgba(0,0,0,0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--border); }
+        .nav-glass { background: rgba(0,0,0,0.8); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--border); }
         
-        .hero-title { font-size: clamp(2.5rem, 10vw, 8.5rem); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em; }
+        .hero-title { font-size: clamp(2.8rem, 12vw, 8.5rem); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em; }
         
         .reveal-item { opacity: 0.5; transition: all 0.5s ease; border-bottom: 1px solid var(--border); padding: 2.5rem 0; }
         .reveal-item:hover { opacity: 1; border-color: var(--accent); }
 
-        .btn-minimal { border: 1px solid var(--border); padding: 1rem 2rem; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; transition: all 0.3s ease; }
+        .btn-minimal { border: 1px solid var(--border); padding: 1rem 2rem; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; transition: all 0.3s ease; text-align: center; }
         .btn-minimal:hover { background: #fff; color: #000; border-color: #fff; }
 
         .emphasis { font-weight: 700; color: #fff; }
@@ -51,32 +50,28 @@
     </style>
 </head>
 <body class="selection:bg-white selection:text-black">
-    <nav class="fixed w-full z-50 nav-glass py-6 px-8 flex justify-between items-center">
+    <nav class="fixed w-full z-50 nav-glass py-5 px-4 md:px-8 flex justify-between items-center">
         <div class="font-black text-sm uppercase tracking-tighter">fudoo <span class="text-muted">/ identity</span></div>
-        <div class="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.3em] font-bold text-muted">
-            <a href="#about" class="hover:text-white transition">About</a>
-            <a href="#skills" class="hover:text-white transition">Expertise</a>
-            <a href="portfolio.html" class="text-white transition underline underline-offset-8">Productions</a>
+        <div class="flex space-x-6 md:space-x-12 text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold text-muted">
+            <a href="#about" class="hover:text-white transition hidden sm:block">About</a>
+            <a href="port.html" class="text-white transition underline underline-offset-8">Archive</a>
             <a href="#connect" class="hover:text-white transition">Connect</a>
         </div>
-        <button onclick="toggleLang()" class="mono text-[10px] font-bold text-muted hover:text-white transition">
-            [ <span id="lang-label">EN</span> ]
-        </button>
     </nav>
 
-    <header class="min-h-screen flex flex-col justify-center px-8 pt-32 pb-24">
-        <div class="animate-fade flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
-            <div class="flex-1">
-                <div class="mono text-[10px] text-muted mb-8 tracking-[0.5em] uppercase font-bold">Creator // Technical Analyst</div>
-                <h1 class="hero-title mb-12 uppercase">
+    <header class="min-h-screen flex flex-col justify-center px-4 md:px-8 pt-32 pb-24">
+        <div class="animate-fade flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24">
+            <div class="flex-1 w-full">
+                <div class="mono text-[10px] text-muted mb-6 md:mb-8 tracking-[0.5em] uppercase font-bold">Creator // Technical Analyst</div>
+                <h1 class="hero-title mb-8 md:mb-12 uppercase">
                     SCALING<br>MODERN<br>IMPACT.
                 </h1>
                 <div class="max-w-2xl">
-                    <p id="hero-desc" class="text-muted text-lg md:text-xl font-light leading-relaxed mb-12">
+                    <p class="text-muted text-base md:text-xl font-light leading-relaxed mb-8 md:mb-12">
                         18-year-old GED graduate bridging the gap between creative storytelling and technical systems to build scalable digital brands.
                     </p>
-                    <div class="flex flex-wrap gap-6">
-                        <a href="portfolio.html" class="btn-minimal bg-white text-black border-white">Explore Archive</a>
+                    <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                        <a href="port.html" class="btn-minimal bg-white text-black border-white">Explore Archive</a>
                         <a href="#connect" class="btn-minimal">Get In Touch</a>
                     </div>
                 </div>
@@ -84,48 +79,47 @@
             
             <div class="flex-1 flex justify-center lg:justify-end w-full">
                 <div class="profile-frame">
-                    <!-- Replace this URL with your actual picture -->
                     <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1000&auto=format&fit=crop" alt="Identity Image">
                 </div>
             </div>
         </div>
     </header>
 
-    <section id="about" class="py-40 px-8 border-t border-white/5">
-        <div class="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-24 items-start">
-            <h2 class="text-5xl font-bold uppercase tracking-tighter leading-none">The Philosophy<br>of <span class="text-muted">Precision.</span></h2>
-            <div class="space-y-12">
-                <p class="text-muted text-xl font-light leading-relaxed">
+    <section id="about" class="py-24 md:py-40 px-4 md:px-8 border-t border-white/5">
+        <div class="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-16 md:gap-24 items-start">
+            <h2 class="text-4xl md:text-5xl font-bold uppercase tracking-tighter leading-none">The Philosophy<br>of <span class="text-muted">Precision.</span></h2>
+            <div class="space-y-8 md:space-y-12">
+                <p class="text-muted text-lg md:text-xl font-light leading-relaxed">
                     <span class="emphasis">Efficiency</span> and <span class="emphasis">scalability</span> are the core of everything I build. I specialize in merging <span class="emphasis">mobile-first production</span> with <span class="emphasis">analytical problem solving</span> to create digital assets that stand the test of time.
                 </p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5 border border-white/5">
-                    <div class="bg-black p-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white">Fluent English</div>
-                    <div class="bg-black p-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white">GED Graduate</div>
-                    <div class="bg-black p-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white">Mobile Cinema</div>
-                    <div class="bg-black p-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white">Solar Tech</div>
+                <div class="grid grid-cols-2 gap-px bg-white/5 border border-white/5">
+                    <div class="bg-black p-6 md:p-8 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-white">Fluent English</div>
+                    <div class="bg-black p-6 md:p-8 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-white">GED Graduate</div>
+                    <div class="bg-black p-6 md:p-8 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-white">Mobile Cinema</div>
+                    <div class="bg-black p-6 md:p-8 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-white">Solar Tech</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="skills" class="py-40 px-8 border-t border-white/5">
+    <section id="skills" class="py-24 md:py-40 px-4 md:px-8 border-t border-white/5">
         <div class="max-w-screen-xl mx-auto">
-            <h2 class="mono text-[10px] text-muted uppercase tracking-[0.5em] mb-20">Core Capabilities</h2>
+            <h2 class="mono text-[10px] text-muted uppercase tracking-[0.5em] mb-12 md:20">Core Capabilities</h2>
             <div class="flex flex-col">
-                <div class="reveal-item flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <h3 class="text-3xl font-bold uppercase tracking-tight">Cinematography</h3>
+                <div class="reveal-item flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 class="text-2xl md:text-3xl font-bold uppercase tracking-tight">Cinematography</h3>
                     <p class="text-muted text-sm max-w-md font-light">
                         <span class="emphasis">Advanced mobile production</span>, studio lighting, and pro-level <span class="emphasis">post-production</span> workflows for modern brands.
                     </p>
                 </div>
-                <div class="reveal-item flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <h3 class="text-3xl font-bold uppercase tracking-tight">Systems Engineering</h3>
+                <div class="reveal-item flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 class="text-2xl md:text-3xl font-bold uppercase tracking-tight">Systems Engineering</h3>
                     <p class="text-muted text-sm max-w-md font-light">
                         Building <span class="emphasis">responsive digital interfaces</span> with clean, modular code and <span class="emphasis">high-performance</span> metrics.
                     </p>
                 </div>
-                <div class="reveal-item flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <h3 class="text-3xl font-bold uppercase tracking-tight">Energy Systems</h3>
+                <div class="reveal-item flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 class="text-2xl md:text-3xl font-bold uppercase tracking-tight">Energy Systems</h3>
                     <p class="text-muted text-sm max-w-md font-light">
                         Technical <span class="emphasis">optimization</span> and precision installation of <span class="emphasis">sustainable solar</span> power infrastructure.
                     </p>
@@ -134,38 +128,24 @@
         </div>
     </section>
 
-    <footer id="connect" class="py-40 px-8 border-t border-white/5 bg-black">
+    <footer id="connect" class="py-24 md:py-40 px-4 md:px-8 border-t border-white/5 bg-black">
         <div class="max-w-screen-xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-16">
-                <div>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 md:gap-16">
+                <div class="w-full">
                     <h2 class="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-8">Deploy.</h2>
-                    <a href="mailto:starman201523@gmail.com" class="text-muted hover:text-white transition text-xl md:text-2xl mono tracking-tighter underline underline-offset-8">starman201523@gmail.com</a>
+                    <a href="mailto:starman201523@gmail.com" class="text-muted hover:text-white transition text-lg md:text-2xl mono tracking-tighter underline underline-offset-8 block truncate">starman201523@gmail.com</a>
                 </div>
-                <div class="flex flex-col gap-4 mono text-[10px] uppercase font-bold tracking-[0.4em] text-muted">
-                    <a href="#" class="hover:text-white transition">TikTok / @fudoo</a>
-                    <a href="#" class="hover:text-white transition">Instagram / @sai</a>
-                    <a href="#" class="hover:text-white transition">GitHub / fudoo-dev</a>
+                <div class="flex flex-col gap-4 mono text-[10px] uppercase font-bold tracking-[0.4em] text-muted whitespace-nowrap">
+                    <a href="https://www.tiktok.com/@saipyaekoko" target="_blank" class="hover:text-white transition">TikTok / @saipyaekoko</a>
+                    <a href="https://www.instagram.com/saipyaekoko" target="_blank" class="hover:text-white transition">Instagram / @saipyaekoko</a>
+                    <a href="https://github.com/saipyaekoko" target="_blank" class="hover:text-white transition">GitHub / saipyaekoko</a>
                 </div>
             </div>
-            <div class="mt-40 pt-8 border-t border-white/5 flex justify-between items-center text-[10px] mono text-white/20 uppercase tracking-widest">
+            <div class="mt-24 md:mt-40 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] mono text-white/20 uppercase tracking-widest">
                 <span>© 2026 saipyaekoko</span>
                 <span>Mandalay, MM</span>
             </div>
         </div>
     </footer>
-
-    <script>
-        function toggleLang() {
-            const label = document.getElementById('lang-label');
-            const desc = document.getElementById('hero-desc');
-            if(label.innerText === 'EN') {
-                label.innerText = 'MY';
-                desc.innerText = "အသက် ၁၈ နှစ်အရွယ် GED ဘွဲ့ရတစ်ဦးဖြစ်ပြီး၊ ဖန်တီးမှုပိုင်းဆိုင်ရာ ထုတ်လုပ်မှုနှင့် နည်းပညာပိုင်းဆိုင်ရာ ခွဲခြမ်းစိတ်ဖြာမှုများကို ပေါင်းစပ်ကာ အမှတ်တံဆိပ်များကို ချဲ့ထွင်ရန် ကြိုးပမ်းနေသူ ဖြစ်ပါသည်။";
-            } else {
-                label.innerText = 'EN';
-                desc.innerText = "18-year-old GED graduate bridging the gap between creative storytelling and technical systems to build scalable digital brands.";
-            }
-        }
-    </script>
 </body>
 </html>
