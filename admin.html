@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>fudoo | System Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; letter-spacing: -0.01em; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .hidden { display: none; }
+        input, select, textarea { 
+            background: rgba(255,255,255,0.03) !important; 
+            border: 1px solid rgba(255,255,255,0.05) !important;
+            border-radius: 4px !important;
+            color: white !important;
+            font-size: 13px !important;
+        }
+        input:focus { border-color: rgba(255,255,255,0.2) !important; }
+        button { border-radius: 4px !important; }
+        .tab-btn { opacity: 0.4; transition: all 0.2s; }
+        .tab-btn.active { opacity: 1; border-bottom: 2px solid white; }
+    </style>
+</head>
+<body class="p-8">
+    <div id="login-form" class="max-w-xs mx-auto mt-32 space-y-8">
+        <h1 class="mono text-[10px] uppercase text-center tracking-[0.6em] text-white/30">Auth Required</h1>
+        <div class="space-y-2">
+            <input id="email" type="email" placeholder="Identity" class="w-full p-4 outline-none">
+            <input id="password" type="password" placeholder="Passcode" class="w-full p-4 outline-none">
+            <button onclick="handleLogin()" class="w-full bg-white text-black py-4 font-bold text-[10px] uppercase tracking-widest mt-4">Initialize</button>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="hidden max-w-6xl mx-auto space-y-20">
+        <header class="flex justify-between items-end border-b border-white/5 pb-10">
+            <div>
+                <h1 class="text-2xl font-bold uppercase tracking-tighter">System <span class="text-white/20">Control</span></h1>
+                <p class="mono text-[9px] text-white/20 uppercase mt-2 tracking-widest">Node: Primary / Admin Active</p>
+            </div>
+            <div class="flex gap-4 items-center">
+                <a href="index.html" class="mono text-[9px] uppercase text-white/40 hover:text-white">View Main</a>
+                <a href="port.html" class="mono text-[9px] uppercase text-white/40 hover:text-white">View Port</a>
+                <button onclick="handleLogout()" class="mono text-[9px] uppercase text-white/40 hover:text-white">[ Logoff ]</button>
+            </div>
+        </header>
+
+        <div class="grid lg:grid-cols-12 gap-16">
+            <div class="lg:col-span-5 space-y-8">
+                <h2 class="mono text-[10px] uppercase tracking-widest text-white/30">Asset Deployment</h2>
+                <div class="space-y-4">
+                    <input id="up-title" type="text" placeholder="Entry Title" class="w-full p-4">
+                    <select id="up-type" class="w-full p-4">
+                        <option>Video</option>
+                        <option>Art</option>
+                    </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[9px] mono uppercase text-white/30">Thumb (JPG)</label>
+                            <input id="up-thumb-file" type="file" accept="image/*" class="w-full p-2 text-[10px]">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] mono uppercase text-white/30">Master (MP4/IMG)</label>
+                            <input id="up-media-file" type="file" class="w-full p-2 text-[10px]">
+                        </div>
+                    </div>
+                    <input id="up-tags" type="text" placeholder="Tags (Comma separated)" class="w-full p-4">
+                    <textarea id="up-desc" placeholder="Operational Logs" class="w-full p-4 h-32"></textarea>
+                    <button id="publish-btn" onclick="uploadAndPublish()" class="bg-white text-black w-full py-5 font-bold uppercase text-[10px] tracking-widest disabled:opacity-50">Execute Upload</button>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7 space-y-12">
+                <div class="flex gap-8 border-b border-white/5 pb-4">
+                    <button id="tab-assets" onclick="switchTab('assets')" class="tab-btn active mono text-[10px] uppercase tracking-widest">Registry</button>
+                    <button id="tab-comments" onclick="switchTab('comments')" class="tab-btn mono text-[10px] uppercase tracking-widest">Interactions</button>
+                </div>
+
+                <div id="section-assets" class="space-y-2">
+                    <div id="items-list" class="space-y-2"></div>
+                </div>
+
+                <div id="section-comments" class="hidden space-y-4">
+                    <div id="all-comments-list" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ehhgrwcgckcqbjoxitsx.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGdyd2NnY2tjcWJqb3hpdHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjg3ODksImV4cCI6MjA4MzcwNDc4OX0.fJIZ0-Fu3wFIZmI3pFwJ83IH_sWRMWc1K6B3GQvLU1k";
+        
+        let supabaseClient;
+
+        function initSupabase() {
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                checkUser();
+            } else {
+                setTimeout(initSupabase, 100);
+            }
+        }
+
+        window.handleLogin = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) alert("Access Denied: " + error.message);
+            checkUser();
+        };
+
+        window.handleLogout = async function() { 
+            await supabaseClient.auth.signOut(); 
+            checkUser(); 
+        };
+
+        async function checkUser() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                fetchItems();
+                fetchAllComments();
+            } else {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('admin-panel').classList.add('hidden');
+            }
+        }
+
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById('section-assets').classList.add('hidden');
+            document.getElementById('section-comments').classList.add('hidden');
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+        };
+
+        async function fetchItems() {
+            const { data, error } = await supabaseClient.from('portfolio_items').select('id, title').order('created_at', { ascending: false });
+            if (error) return;
+            document.getElementById('items-list').innerHTML = data.map(i => `
+                <div class="flex justify-between bg-white/[0.02] p-4 items-center border border-white/[0.05]">
+                    <span class="text-[11px] font-bold text-white/50 uppercase tracking-tighter">${i.title}</span>
+                    <button onclick="deleteItem('${i.id}')" class="text-[9px] font-bold text-red-500 hover:bg-red-500/10 px-4 py-2 cursor-pointer">TERMINATE ASSET</button>
+                </div>
+            `).join('') || '<p class="mono text-[10px] text-white/10 py-10">Registry Empty</p>';
+        }
+
+        async function fetchAllComments() {
+            const { data } = await supabaseClient.from('comments').select('*').order('created_at', { ascending: false });
+            if (data) {
+                document.getElementById('all-comments-list').innerHTML = data.map(c => `
+                    <div class="flex justify-between bg-white/[0.02] p-3 items-center border border-white/[0.05]">
+                        <div class="max-w-[70%]">
+                            <p class="text-[10px] text-white/40 uppercase mono mb-1">${c.author}</p>
+                            <p class="text-[11px] truncate">${c.content}</p>
+                        </div>
+                        <button onclick="deleteComment('${c.id}')" class="text-[9px] font-bold text-red-500/60 hover:text-red-500 px-3 cursor-pointer">RM_INT</button>
+                    </div>
+                `).join('') || '<p class="mono text-[10px] text-white/10 py-10">No interactions recorded.</p>';
+            }
+        }
+
+        window.deleteItem = async function(id) {
+            if(!confirm('Confirm termination?')) return;
+            const { error } = await supabaseClient.from('portfolio_items').delete().eq('id', id);
+            if (error) alert("Deletion failed");
+            else fetchItems();
+        };
+
+        window.deleteComment = async function(id) {
+            const { error } = await supabaseClient.from('comments').delete().eq('id', id);
+            if (error) alert("Error deleting interaction");
+            else fetchAllComments();
+        };
+
+        window.uploadAndPublish = async function() {
+            const title = document.getElementById('up-title').value;
+            const type = document.getElementById('up-type').value;
+            const desc = document.getElementById('up-desc').value;
+            const tags = document.getElementById('up-tags').value;
+            const thumbFile = document.getElementById('up-thumb-file').files[0];
+            const mediaFile = document.getElementById('up-media-file').files[0];
+            const btn = document.getElementById('publish-btn');
+
+            if (!title || !thumbFile || !mediaFile) {
+                alert("Please fill in the title and select both files.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "DEPLOYING...";
+
+            try {
+                // 1. Upload Thumbnail
+                const thumbExt = thumbFile.name.split('.').pop();
+                const thumbName = `file_${Date.now()}.${thumbExt}`;
+                const { error: thumbErr } = await supabaseClient.storage.from('thumbnails').upload(thumbName, thumbFile);
+                
+                if (thumbErr) {
+                    if (thumbErr.message.includes("violates row-level security policy")) {
+                        throw new Error("RLS POLICY ERROR: You must allow 'INSERT' and 'UPDATE' permissions for 'Authenticated' users on your storage buckets in the Supabase Dashboard.");
+                    }
+                    throw thumbErr;
+                }
+                
+                const { data: thumbData } = supabaseClient.storage.from('thumbnails').getPublicUrl(thumbName);
+                const thumbUrl = thumbData.publicUrl;
+
+                // 2. Upload Media
+                const mediaExt = mediaFile.name.split('.').pop();
+                const mediaName = `file_${Date.now()}.${mediaExt}`;
+                const { error: mediaErr } = await supabaseClient.storage.from('media').upload(mediaName, mediaFile);
+                
+                if (mediaErr) throw mediaErr;
+                
+                const { data: mediaData } = supabaseClient.storage.from('media').getPublicUrl(mediaName);
+                const mediaUrl = mediaData.publicUrl;
+
+                // 3. Insert Database Record
+                const { error: insertErr } = await supabaseClient.from('portfolio_items').insert([{
+                    title,
+                    type,
+                    description: desc,
+                    tags: tags ? tags.split(',').map(t => t.trim()) : [],
+                    thumbnail_url: thumbUrl,
+                    media_url: mediaUrl
+                }]);
+
+                if (insertErr) throw insertErr;
+
+                alert("Deployment Successful.");
+                fetchItems();
+                
+                // Reset form
+                document.getElementById('up-title').value = '';
+                document.getElementById('up-desc').value = '';
+                document.getElementById('up-tags').value = '';
+                document.getElementById('up-thumb-file').value = '';
+                document.getElementById('up-media-file').value = '';
+                
+            } catch (err) {
+                console.error(err);
+                alert(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Execute Upload";
+            }
+        };
+
+        initSupabase();
+    </script>
+</body>
+</html>
